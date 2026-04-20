@@ -17,17 +17,17 @@ export default function Overview() {
   const [period, setPeriod] = useState("yearly");
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-10">
-      
+    <div className="space-y-4 sm:space-y-8 animate-in fade-in duration-700">
+
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-medium text-[#2C2E33]">Performance Analytics</h1>
-          <p className="text-gray-500 mt-1 font-normal">Comprehensive metrics for finance and platform.</p>
+          <h1 className="text-2xl sm:text-3xl font-medium text-[#2C2E33]">Performance Analytics</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1 font-normal">Comprehensive metrics for finance and platform.</p>
         </div>
-        
+
         <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-40 h-10 px-4 py-6 bg-white border border-gray-200 rounded-lg text-sm font-medium text-[#2C2E33] shadow-sm hover:bg-gray-50 transition-all cursor-pointer focus:ring-1 focus:ring-gray-300 focus:border-gray-300 gap-1">
+          <SelectTrigger className="w-full sm:w-40 h-10 px-4 py-6 bg-white border border-gray-200 rounded-lg text-sm font-medium text-[#2C2E33] shadow-sm hover:bg-gray-50 transition-all cursor-pointer focus:ring-1 focus:ring-gray-300 focus:border-gray-300 gap-1">
             <Calendar className="w-4 h-4 text-[#737780] shrink-0" />
             <SelectValue />
           </SelectTrigger>
@@ -44,7 +44,7 @@ export default function Overview() {
       <CardStates />
 
       {/* ── Row 2: Charts ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-2">
           <SalesAnalytics />
         </div>
@@ -52,7 +52,6 @@ export default function Overview() {
           <UserDistribution />
         </div>
       </div>
-
     </div>
   );
 }

@@ -32,12 +32,12 @@ export default function ProfileSettings() {
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm p-8 space-y-8"
+        className="bg-white rounded-xl shadow-sm p-4 sm:p-8 space-y-6 sm:space-y-8"
       >
         {/* Header Section */}
-        <div className="flex items-center gap-6">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
           <div className="relative group">
-            <div className="w-24 h-24 rounded-xl overflow-hidden relative border-4 border-white shadow-sm">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden relative border-4 border-white shadow-sm">
               <Image
                 src={USER_AVATAR}
                 alt="Rasel Parvez"
@@ -46,21 +46,21 @@ export default function ProfileSettings() {
                 unoptimized
               />
             </div>
-            <button className="absolute -bottom-2 -right-2 w-8 h-8 rounded-lg bg-[#2C2E33] flex items-center justify-center text-white border-2 border-white shadow-sm hover:scale-105 transition-transform cursor-pointer">
-              <Camera className="w-4 h-4" />
+            <button className="absolute -bottom-2 -right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#2C2E33] flex items-center justify-center text-white border-2 border-white shadow-sm hover:scale-105 transition-transform cursor-pointer">
+              <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <h2 className="text-xl font-bold" style={{ color: "#2C2E33" }}>Personal Information</h2>
-              <p className="text-sm font-medium" style={{ color: "#6C757D" }}>
+              <h2 className="text-lg sm:text-xl font-bold" style={{ color: "#2C2E33" }}>Personal Information</h2>
+              <p className="text-xs sm:text-sm font-medium" style={{ color: "#6C757D" }}>
                 Super Admin • Infrastructure &amp; Operations
               </p>
             </div>
             <Button
               variant="outline"
-              className="h-10 rounded-sm px-4 text-xs font-semibold border cursor-pointer hover:bg-gray-50 transition-colors"
+              className="h-9 sm:h-10 rounded-sm px-4 text-[10px] sm:text-xs font-semibold border cursor-pointer hover:bg-gray-50 transition-colors"
               style={{ borderColor: "#F2F2F2", color: "#2C2E33" }}
             >
               Update Profile Photo
@@ -111,18 +111,18 @@ export default function ProfileSettings() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
-        className="bg-white rounded-xl shadow-sm p-4 flex items-center justify-end gap-3"
+        className="bg-white rounded-xl shadow-sm p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3"
       >
         <Button
           variant="outline"
-          className="h-11 px-10 rounded-sm font-semibold border bg-[#F3F4F6] border-transparent cursor-pointer hover:bg-gray-200"
+          className="h-11 px-6 sm:px-10 rounded-sm font-semibold border bg-[#F3F4F6] border-transparent cursor-pointer hover:bg-gray-200"
           style={{ color: "#2C2E33" }}
         >
           Cancel
         </Button>
         <Button
           onClick={handleSave}
-          className="h-11 px-10 rounded-sm font-semibold text-white cursor-pointer"
+          className="h-11 px-6 sm:px-10 rounded-sm font-semibold text-white cursor-pointer"
           style={{ backgroundColor: "#FF4A00" }}
         >
           Save Changes

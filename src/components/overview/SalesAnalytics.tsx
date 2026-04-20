@@ -34,20 +34,20 @@ export default function SalesAnalytics() {
       className="h-full"
     >
       <Card className="border-none shadow-sm rounded-lg overflow-visible h-full flex flex-col p-0">
-        <CardContent className="p-10 flex flex-col gap-10 h-full">
+        <CardContent className="p-5 sm:p-10 flex flex-col gap-6 sm:gap-10 h-full">
           {/* Card Header */}
-          <div className="flex justify-between items-start">
-            <div className="space-y-2">
-              <h2 className="text-xl font-medium text-[#2C2E33]">Sales Analytics</h2>
-              <p className="text-5xl font-medium text-[#2C2E33] tracking-tight">$46,650</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="space-y-1 sm:space-y-2">
+              <h2 className="text-lg sm:text-xl font-medium text-[#2C2E33]">Sales Analytics</h2>
+              <p className="text-3xl sm:text-5xl font-medium text-[#2C2E33] tracking-tight">$46,650</p>
             </div>
-            <div className="flex items-center gap-4">
-              <button className="w-13 h-13 flex items-center justify-center bg-[#F1DED6] rounded-lg hover:bg-[#EACFC3] transition-all active:scale-95 shadow-sm">
-                <Activity className="w-7 h-7 text-[#FF4A00]" />
+            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+              <button className="w-10 h-10 sm:w-13 sm:h-13 flex items-center justify-center bg-[#F1DED6] rounded-lg hover:bg-[#EACFC3] transition-all active:scale-95 shadow-sm shrink-0">
+                <Activity className="w-5 h-5 sm:w-7 sm:h-7 text-[#FF4A00]" />
               </button>
 
               <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="h-12 px-5 py-6 rounded-sm border border-gray-200 text-sm font-medium text-[#737780] bg-white shadow-none cursor-pointer focus:ring-1 focus:ring-gray-200 min-w-[130px]">
+                <SelectTrigger className="h-10 sm:h-12 flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-6 rounded-sm border border-gray-200 text-xs sm:text-sm font-medium text-[#737780] bg-white shadow-none cursor-pointer focus:ring-1 focus:ring-gray-200 min-w-[110px] sm:min-w-[130px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="z-[50] rounded-lg border border-gray-100 shadow-xl bg-white">
@@ -63,20 +63,20 @@ export default function SalesAnalytics() {
           </div>
 
           {/* Chart Section */}
-          <div className="flex-1 w-full min-h-[400px]">
+          <div className="flex-1 w-full min-h-[300px] sm:min-h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+              <BarChart data={data} margin={{ top: 20, right: 10, left: -10, bottom: 0 }}>
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#9CA3AF", fontSize: 13, fontWeight: 600 }}
-                  dy={15}
+                  tick={{ fill: "#9CA3AF", fontSize: 11, fontWeight: 600 }}
+                  dy={10}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#9CA3AF", fontSize: 13, fontWeight: 500 }}
+                  tick={{ fill: "#9CA3AF", fontSize: 11, fontWeight: 500 }}
                   tickFormatter={(v) => `$${v / 1000}k`}
                   ticks={[0, 3500, 7000, 10500, 14000]}
                 />
@@ -87,7 +87,7 @@ export default function SalesAnalytics() {
                 <Bar
                   dataKey="value"
                   radius={[16, 16, 16, 16]}
-                  barSize={55}
+                  maxBarSize={55}
                 >
                   {data.map((entry, index) => (
                     <Cell

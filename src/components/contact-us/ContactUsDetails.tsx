@@ -66,23 +66,43 @@ export default function ContactUsDetails({}: ContactUsDetailsProps) {
       </div>
 
       {/* ── Pagination ── */}
-      <div className="flex items-center justify-center gap-2 mt-12 pb-2">
-        <button className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
-          <ChevronLeft className="w-6 h-6" />
+      <div className="flex items-center justify-center gap-1 sm:gap-2 mt-8 sm:mt-12 pb-2">
+        <button className="p-1 sm:p-2 text-gray-400 hover:text-gray-900 transition-colors">
+          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
-        {[1, 2, 3, 4, 5, 6, "...", 10].map((page, i) => (
-          <button
-            key={i}
-            className={cn(
-              "w-10 h-10 rounded-full shadow-lg cursor-pointer text-sm font-medium transition-all",
-              page === 1 ? "bg-[#FF4A00] text-white shadow-lg shadow-orange-100" : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-100 shadow-sm"
-            )}
-          >
-            {page}
-          </button>
-        ))}
-        <button className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
-          <ChevronRight className="w-6 h-6" />
+        
+        {/* Desktop Version */}
+        <div className="hidden sm:flex items-center gap-2">
+          {[1, 2, 3, 4, 5, 6, "...", 10].map((page, i) => (
+            <button
+              key={i}
+              className={cn(
+                "w-10 h-10 rounded-full shadow-lg cursor-pointer text-sm font-medium transition-all",
+                page === 1 ? "bg-[#FF4A00] text-white shadow-lg shadow-orange-100" : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-100 shadow-sm"
+              )}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+
+        {/* Mobile Version - Compact */}
+        <div className="flex sm:hidden items-center gap-1">
+          {[1, 2, "...", 10].map((page, i) => (
+            <button
+              key={`mob-${i}`}
+              className={cn(
+                "w-8 h-8 rounded-full shadow-md cursor-pointer text-xs font-bold transition-all",
+                page === 1 ? "bg-[#FF4A00] text-white shadow-md shadow-orange-100" : "bg-white text-gray-600 border border-gray-100 shadow-sm"
+              )}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+
+        <button className="p-1 sm:p-2 text-gray-400 hover:text-gray-900 transition-colors">
+          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       </div>
     </div>

@@ -13,7 +13,7 @@ const stats = [
 
 export default function CardStates() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
       {stats.map((stat, index) => (
         <motion.div
           key={stat.title}
@@ -21,19 +21,19 @@ export default function CardStates() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
         >
-          <Card className="rounded-lg h-full py-7 overflow-hidden group hover:shadow-md transition-shadow duration-300">
-            <CardContent className=" flex flex-col gap-6">
+          <Card className="rounded-lg h-full py-5 sm:py-7 overflow-hidden group hover:shadow-md transition-shadow duration-300">
+            <CardContent className=" flex flex-col gap-4 sm:gap-6">
               {/* Icon Container */}
-              <div className="w-12 h-12 rounded-lg bg-white/60 flex items-center justify-center border border-gray-200 transition-transform duration-300">
-                <stat.icon className="w-7 h-7 text-[#FF4A00]" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-white/60 flex items-center justify-center border border-gray-200 transition-transform duration-300">
+                <stat.icon className="w-6 h-6 sm:w-7 sm:h-7 text-[#FF4A00]" />
               </div>
 
               <div className="space-y-1">
-                <p className="text-[11px] font-medium tracking-[0.1em] text-[#9CA3AF]">
-                  {stat.title}
+                <p className="text-[10px] sm:text-[11px] font-medium tracking-[0.1em] text-[#9CA3AF]">
+                   {stat.title}
                 </p>
-                <p className="text-4xl font-bold text-[#2C2E33]">
-                  {stat.value}
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#2C2E33]">
+                   {stat.value}
                 </p>
               </div>
             </CardContent>

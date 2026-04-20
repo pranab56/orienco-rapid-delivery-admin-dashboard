@@ -57,7 +57,7 @@ const sections = [
 export default function AppSideBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
 
   const isActive = (path: string) => {
@@ -66,6 +66,7 @@ export default function AppSideBar() {
   };
 
   const handleLogout = () => {
+    setOpenMobile(false);
     router.push("/auth/login");
   };
 
@@ -77,7 +78,7 @@ export default function AppSideBar() {
       >
         {/* ── Logo ── */}
         <SidebarHeader className="px-6 py-8">
-          <Link href="/" className="flex items-center justify-center">
+          <Link href="/" className="flex items-center justify-center" onClick={() => setOpenMobile(false)}>
             <div className={cn("relative", isCollapsed ? "w-10 h-10" : "w-full h-24")}>
               <Image
                 src="/icons/logo.png"
@@ -118,7 +119,7 @@ export default function AppSideBar() {
                           )}
                           style={active ? { backgroundColor: "#FF4A00" } : {}}
                         >
-                          <Link href={item.path} className="flex items-center justify-between w-full">
+                          <Link href={item.path} className="flex items-center justify-between w-full" onClick={() => setOpenMobile(false)}>
                             <div className="flex items-center gap-4">
                               <item.icon className={cn("w-5 h-5", active ? "text-white" : "text-[#737780]")} />
                               {!isCollapsed && (

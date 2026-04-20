@@ -25,22 +25,22 @@ export default function AddUserForm({ onCancel }: { onCancel?: () => void }) {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto bg-white p-8 rounded-xl relative shadow-xl">
+    <div className="w-full max-w-lg mx-auto bg-white p-5 sm:p-8 rounded-xl relative shadow-xl border border-white/40">
       {onCancel && (
         <button
           onClick={onCancel}
-          className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors"
+          className="absolute top-4 sm:top-6 right-4 sm:right-6 p-2 rounded-full hover:bg-gray-100 transition-colors"
         >
-          <X className="w-5 h-5 text-gray-400" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
         </button>
       )}
 
-      <div className="flex flex-col items-center gap-2 mb-8">
-        <div className="w-14 h-14 rounded-xl bg-[#FFF3ED] flex items-center justify-center">
-          <UserPlus className="w-7 h-7 text-[#FF4A00]" />
+      <div className="flex flex-col items-center gap-2 mb-6 sm:mb-8">
+        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-[#FFF3ED] flex items-center justify-center">
+          <UserPlus className="w-6 h-6 sm:w-7 sm:h-7 text-[#FF4A00]" />
         </div>
-        <h2 className="text-xl font-bold mt-2" style={{ color: "#2C2E33" }}>Add New User</h2>
-        <p className="text-sm text-center" style={{ color: "#6C757D" }}>
+        <h2 className="text-lg sm:text-xl font-bold mt-1 sm:mt-2" style={{ color: "#2C2E33" }}>Add New User</h2>
+        <p className="text-xs sm:text-sm text-center" style={{ color: "#6C757D" }}>
           Fill in the details below to create a new user account.
         </p>
       </div>
@@ -56,11 +56,11 @@ export default function AddUserForm({ onCancel }: { onCancel?: () => void }) {
           <Input className={inputCls} style={inputStyle} type="email" placeholder="marcus@example.com" required />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label className="text-sm font-semibold" style={{ color: "#2C2E33" }}>Role</Label>
+            <Label className="text-[11px] sm:text-sm font-semibold" style={{ color: "#2C2E33" }}>Role</Label>
             <Select defaultValue="Customer">
-              <SelectTrigger className="h-11 w-full py-5 rounded-sm border" style={inputStyle}>
+              <SelectTrigger className="h-10 sm:h-11 w-full py-4 sm:py-5 rounded-sm border focus:ring-[#FF4A00]" style={inputStyle}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -72,9 +72,9 @@ export default function AddUserForm({ onCancel }: { onCancel?: () => void }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-sm font-semibold" style={{ color: "#2C2E33" }}>Status</Label>
+            <Label className="text-[11px] sm:text-sm font-semibold" style={{ color: "#2C2E33" }}>Status</Label>
             <Select defaultValue="Active">
-              <SelectTrigger className="h-11 py-5 w-full rounded-sm border" style={inputStyle}>
+              <SelectTrigger className="h-10 sm:h-11 py-4 sm:py-5 w-full rounded-sm border focus:ring-[#FF4A00]" style={inputStyle}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

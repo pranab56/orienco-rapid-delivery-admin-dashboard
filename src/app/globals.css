@@ -218,4 +218,41 @@
     background-color: #FF4A00 !important;
     color: #FFFFFF !important;
   }
+
+  /* Mobile scroll container styling */
+  .mobile-scroll-container {
+    scrollbar-width: thin;
+    scrollbar-color: #D1D5DB #F3F4F6;
+  }
+
+  .mobile-scroll-container::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+    display: block;
+  }
+
+  .mobile-scroll-container::-webkit-scrollbar-track {
+    background: #F3F4F6;
+    border-radius: 3px;
+  }
+
+  .mobile-scroll-container::-webkit-scrollbar-thumb {
+    background: #D1D5DB;
+    border-radius: 3px;
+  }
+
+  .mobile-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #9CA3AF;
+  }
+
+  /* Hide scrollbar on desktop, show on mobile */
+  @media (min-width: 1024px) {
+    .mobile-scroll-container::-webkit-scrollbar {
+      display: none;
+    }
+    .mobile-scroll-container {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+  }
 }

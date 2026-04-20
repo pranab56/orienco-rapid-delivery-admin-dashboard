@@ -31,7 +31,7 @@ export default function UsersManagementDetails({}: UsersManagementDetailsProps) 
   return (
     <div className="space-y-8 animate-in slide-in-from-right duration-500 pb-10">
       {/* ── Breadcrumbs / Action ── */}
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <Link
           href="/users-management"
           className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
@@ -42,7 +42,7 @@ export default function UsersManagementDetails({}: UsersManagementDetailsProps) 
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <button className="px-10 py-2.5 bg-white border border-red-100 text-red-400 rounded-sm cursor-pointer text-sm font-medium shadow-sm hover:bg-red-50 transition-all active:scale-95">
+            <button className="w-full sm:w-auto px-6 sm:px-10 py-2.5 bg-white border border-red-100 text-red-400 rounded-sm cursor-pointer text-xs sm:text-sm font-medium shadow-sm hover:bg-red-50 transition-all active:scale-95">
               Suspend Account
             </button>
           </AlertDialogTrigger>
@@ -66,18 +66,18 @@ export default function UsersManagementDetails({}: UsersManagementDetailsProps) 
       </div>
 
       <div className="space-y-1">
-        <h1 className="text-3xl font-medium ">View User Details</h1>
-        <p className="text-gray-500 font-normal">Complete information about this user account.</p>
+        <h1 className="text-2xl sm:text-3xl font-medium ">View User Details</h1>
+        <p className="text-sm sm:text-base text-gray-500 font-normal">Complete information about this user account.</p>
       </div>
 
       <div className="grid grid-cols-12 gap-8 mt-10">
 
         {/* ── Profile Sidebar ── */}
         <div className="col-span-12 lg:col-span-4 h-fit">
-          <Card className="border-none rounded-lg overflow-hidden p-2">
-            <CardContent className="p-10 flex flex-col items-center text-center">
-              <div className="relative w-36 h-36 rounded-full border-4 border-white shadow-xl overflow-hidden mb-6">
-                <div className="w-full h-full bg-[#1A365D] flex items-center justify-center text-white text-4xl font-black">
+          <Card className="border-none rounded-lg overflow-hidden p-1 sm:p-2">
+            <CardContent className="p-5 sm:p-10 flex flex-col items-center text-center">
+              <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full border-4 border-white shadow-xl overflow-hidden mb-6">
+                <div className="w-full h-full bg-[#1A365D] flex items-center justify-center text-white text-3xl sm:text-4xl font-black">
                   JS
                 </div>
               </div>
@@ -126,8 +126,8 @@ export default function UsersManagementDetails({}: UsersManagementDetailsProps) 
         {/* ── Main Information ── */}
         <div className="col-span-12 lg:col-span-8">
           <Card className="border-none shadow-sm rounded-lg overflow-hidden">
-            <CardContent className="p-10 space-y-12">
-              <h3 className="text-xl font-medium">Personal Information</h3>
+            <CardContent className="p-5 sm:p-10 space-y-8 sm:space-y-12">
+              <h3 className="text-lg sm:text-xl font-medium">Personal Information</h3>
 
               <div className="flex items-center gap-6">
                 <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-200 shrink-0 border-2 border-white shadow-sm ring-1 ring-gray-100">
@@ -170,15 +170,15 @@ export default function UsersManagementDetails({}: UsersManagementDetailsProps) 
       </div>
 
       {/* ── Document Section ── */}
-      <h3 className="text-xl font-medium pt-10">National ID Card</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <div className="col-span-2 aspect-[3/2] bg-gray-100 rounded-[32px] overflow-hidden border-4 border-white shadow-sm flex items-center justify-center p-4">
-          <div className="w-full h-full bg-[#D9D9D9] rounded-2xl flex items-center justify-center text-gray-400 text-xs font-bold">
+      <h3 className="text-lg sm:text-xl font-medium pt-10">National ID Card</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
+        <div className="col-span-1 aspect-[3/2] bg-gray-100 rounded-[20px] sm:rounded-[32px] overflow-hidden border-4 border-white shadow-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full h-full bg-[#D9D9D9] rounded-xl sm:rounded-2xl flex items-center justify-center text-gray-400 text-[10px] sm:text-xs font-bold">
             [ National ID Front ]
           </div>
         </div>
-        <div className="col-span-2 aspect-[3/2] bg-gray-100 rounded-[32px] overflow-hidden border-4 border-white shadow-sm flex items-center justify-center p-4">
-          <div className="w-full h-full bg-[#D9D9D9] rounded-2xl flex items-center justify-center text-gray-400 text-xs font-bold">
+        <div className="col-span-1 aspect-[3/2] bg-gray-100 rounded-[20px] sm:rounded-[32px] overflow-hidden border-4 border-white shadow-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full h-full bg-[#D9D9D9] rounded-xl sm:rounded-2xl flex items-center justify-center text-gray-400 text-[10px] sm:text-xs font-bold">
             [ Driving License ]
           </div>
         </div>

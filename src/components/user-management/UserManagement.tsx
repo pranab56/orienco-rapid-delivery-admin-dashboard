@@ -104,7 +104,7 @@ export default function UserManagement() {
     <div className="space-y-6">
 
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((s, i) => {
           const Icon = s.icon;
           return (
@@ -114,15 +114,15 @@ export default function UserManagement() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
             >
-              <Card className="px-5 py-3 border-none shadow-sm bg-white flex flex-col gap-3 ">
+              <Card className="px-3 sm:px-5 py-3 sm:py-4 border-none shadow-sm bg-white flex flex-col gap-2 sm:gap-3 ">
                 <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center"
+                  className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center"
                   style={{ backgroundColor: s.iconBg }}
                 >
-                  <Icon className="w-5 h-5" style={{ color: s.iconColor }} />
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: s.iconColor }} />
                 </div>
-                <p className="text-sm font-medium" style={{ color: "#6C757D" }}>{s.label}</p>
-                <p className="text-2xl font-bold" style={{ color: "#2C2E33" }}>{s.value}</p>
+                <p className="text-[10px] sm:text-sm font-medium" style={{ color: "#6C757D" }}>{s.label}</p>
+                <p className="text-lg sm:text-2xl font-bold" style={{ color: "#2C2E33" }}>{s.value}</p>
               </Card>
             </motion.div>
           );
@@ -138,30 +138,30 @@ export default function UserManagement() {
         <Card className="border-none shadow-sm bg-white overflow-hidden p-0">
 
           {/* Header */}
-          <div className="flex items-center justify-between px-6 pt-5 pb-3">
-            <h2 className="text-base font-bold" style={{ color: "#2C2E33" }}>Customer List</h2>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 pt-5 pb-3 gap-4">
+            <h2 className="text-sm sm:text-base font-bold" style={{ color: "#2C2E33" }}>Customer List</h2>
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
                 <button
-                  className="flex items-center gap-2 h-9 px-4 rounded-sm text-sm font-semibold text-white cursor-pointer transition-opacity hover:opacity-90"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 h-9 px-4 rounded-sm text-xs sm:text-sm font-semibold text-white cursor-pointer transition-opacity hover:opacity-90"
                   style={{ backgroundColor: "#FF4A00" }}
                 >
                   <Plus className="w-4 h-4" /> Add New User
                 </button>
               </DialogTrigger>
-              <DialogContent className="max-w-xl p-0 border-none bg-transparent shadow-none [&>button]:hidden">
+              <DialogContent className="max-w-xl p-0 border-none bg-transparent shadow-none [&>button]:hidden w-[95vw] sm:w-full">
                 <AddUserForm onCancel={() => setIsAddOpen(false)} />
               </DialogContent>
             </Dialog>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-6 px-6 border-b" style={{ borderColor: "#F2F2F2" }}>
+          <div className="flex gap-4 sm:gap-6 px-4 sm:px-6 border-b overflow-x-auto no-scrollbar" style={{ borderColor: "#F2F2F2" }}>
             {TABS.map((t) => (
               <button
                 key={t}
                 onClick={() => { setTab(t); setPage(1); setSelected([]); }}
-                className="pb-3 text-sm font-semibold relative cursor-pointer transition-colors"
+                className="pb-3 text-xs sm:text-sm font-semibold relative cursor-pointer transition-colors shrink-0"
                 style={{ color: tab === t ? "#2C2E33" : "#6C757D" }}
               >
                 {t}
@@ -176,26 +176,26 @@ export default function UserManagement() {
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
-            <Table>
+          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 scrollbar-thumb-rounded-full mobile-scroll-container">
+            <Table className="min-w-[700px] sm:min-w-[800px] lg:min-w-0">
               <TableHeader>
                 <TableRow style={{ borderColor: "#F2F2F2" }}>
-                  <TableHead className="w-10 pl-6">
+                  <TableHead className="w-10 pl-4 sm:pl-6">
                     <Checkbox
                       checked={selected.length === filtered.length && filtered.length > 0}
                       onCheckedChange={toggleAll}
                     />
                   </TableHead>
-                  <TableHead className="text-xs font-semibold" style={{ color: "#6C757D" }}>
+                  <TableHead className="text-xs font-semibold whitespace-nowrap" style={{ color: "#6C757D" }}>
                     Customer Info
                   </TableHead>
-                  <TableHead className="text-xs font-semibold" style={{ color: "#6C757D" }}>
+                  <TableHead className="text-xs font-semibold whitespace-nowrap" style={{ color: "#6C757D" }}>
                     Status
                   </TableHead>
-                  <TableHead className="text-xs font-semibold" style={{ color: "#6C757D" }}>
+                  <TableHead className="text-xs font-semibold whitespace-nowrap" style={{ color: "#6C757D" }}>
                     Join Date
                   </TableHead>
-                  <TableHead className="text-xs font-semibold" style={{ color: "#6C757D" }}>
+                  <TableHead className="text-xs font-semibold whitespace-nowrap" style={{ color: "#6C757D" }}>
                     Total Bookings
                   </TableHead>
                 </TableRow>
@@ -209,7 +209,7 @@ export default function UserManagement() {
                     className="hover:bg-gray-50/60 transition-colors"
                   >
                     {/* Checkbox */}
-                    <TableCell className="pl-6">
+                    <TableCell className="pl-4 sm:pl-6">
                       <Checkbox
                         checked={selected.includes(c.id)}
                         onCheckedChange={() => toggle(c.id)}
@@ -217,9 +217,9 @@ export default function UserManagement() {
                     </TableCell>
 
                     {/* Customer Info */}
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0">
+                    <TableCell className="min-w-[200px] sm:min-w-[250px]">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0">
                           <Image
                             src={AVATAR}
                             alt={c.name}
@@ -228,24 +228,24 @@ export default function UserManagement() {
                             unoptimized
                           />
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold" style={{ color: "#2C2E33" }}>{c.name}</p>
-                          <p className="text-xs" style={{ color: "#6C757D" }}>{c.email}</p>
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-semibold truncate" style={{ color: "#2C2E33" }}>{c.name}</p>
+                          <p className="text-[10px] sm:text-xs truncate" style={{ color: "#6C757D" }}>{c.email}</p>
                         </div>
                       </div>
                     </TableCell>
 
                     {/* Status */}
-                    <TableCell><StatusBadge status={c.status} /></TableCell>
+                    <TableCell className="whitespace-nowrap"><StatusBadge status={c.status} /></TableCell>
 
                     {/* Join Date */}
-                    <TableCell>
-                      <span className="text-sm" style={{ color: "#2C2E33" }}>{c.date}</span>
+                    <TableCell className="whitespace-nowrap">
+                      <span className="text-xs sm:text-sm" style={{ color: "#2C2E33" }}>{c.date}</span>
                     </TableCell>
 
                     {/* Total Bookings */}
-                    <TableCell>
-                      <span className="text-sm font-semibold" style={{ color: "#2C2E33" }}>
+                    <TableCell className="whitespace-nowrap">
+                      <span className="text-xs sm:text-sm font-semibold" style={{ color: "#2C2E33" }}>
                         {c.bookings}
                       </span>
                     </TableCell>
@@ -265,10 +265,10 @@ export default function UserManagement() {
 
           {/* Pagination */}
           <div
-            className="flex items-center justify-between px-6 py-4 border-t"
+            className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-6 py-4 border-t gap-4"
             style={{ borderColor: "#F2F2F2" }}
           >
-            <p className="text-sm" style={{ color: "#6C757D" }}>
+            <p className="text-xs sm:text-sm order-2 sm:order-1" style={{ color: "#6C757D" }}>
               Showing{" "}
               <span className="font-semibold" style={{ color: "#2C2E33" }}>
                 {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, TOTAL)}
@@ -278,42 +278,44 @@ export default function UserManagement() {
               entries
             </p>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 order-1 sm:order-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="flex items-center gap-1 px-3 h-8 text-sm rounded-sm disabled:opacity-40 cursor-pointer hover:bg-gray-100 transition-colors"
+                className="flex items-center gap-1 px-2 sm:px-3 h-8 text-[10px] sm:text-sm rounded-sm disabled:opacity-40 cursor-pointer hover:bg-gray-100 transition-colors"
                 style={{ color: "#2C2E33" }}
               >
-                <ChevronLeft className="w-4 h-4" /> Previous
+                <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" /> Prev
               </button>
 
-              {PAGES.map((p, i) =>
-                p === "..." ? (
-                  <span key={i} className="px-1 text-sm" style={{ color: "#6C757D" }}>...</span>
-                ) : (
-                  <button
-                    key={i}
-                    onClick={() => setPage(Number(p))}
-                    className="w-8 h-8 text-sm rounded-sm font-medium transition-colors cursor-pointer"
-                    style={
-                      page === p
-                        ? { backgroundColor: "#FF4A00", color: "#FFFFFF" }
-                        : { color: "#2C2E33", backgroundColor: "transparent" }
-                    }
-                  >
-                    {p}
-                  </button>
-                )
-              )}
+              <div className="flex items-center gap-0.5">
+                {PAGES.map((p, i) =>
+                  p === "..." ? (
+                    <span key={i} className="px-1 text-xs sm:text-sm" style={{ color: "#6C757D" }}>...</span>
+                  ) : (
+                    <button
+                      key={i}
+                      onClick={() => setPage(Number(p))}
+                      className="w-7 h-7 sm:w-8 sm:h-8 text-[10px] sm:text-sm rounded-sm font-medium transition-colors cursor-pointer"
+                      style={
+                        page === p
+                          ? { backgroundColor: "#FF4A00", color: "#FFFFFF" }
+                          : { color: "#2C2E33", backgroundColor: "transparent" }
+                      }
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+              </div>
 
               <button
                 onClick={() => setPage((p) => Math.min(LAST_PG, p + 1))}
                 disabled={page === LAST_PG}
-                className="flex items-center gap-1 px-3 h-8 text-sm rounded-sm disabled:opacity-40 cursor-pointer hover:bg-gray-100 transition-colors"
+                className="flex items-center gap-1 px-2 sm:px-3 h-8 text-[10px] sm:text-sm rounded-sm disabled:opacity-40 cursor-pointer hover:bg-gray-100 transition-colors"
                 style={{ color: "#2C2E33" }}
               >
-                Next <ChevronRight className="w-4 h-4" />
+                Next <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             </div>
           </div>
