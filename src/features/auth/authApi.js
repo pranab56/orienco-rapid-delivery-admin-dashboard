@@ -6,7 +6,7 @@ export const authApi = baseApi.injectEndpoints({
     // Login
     login: builder.mutation({
       query: (credentials) => ({
-        url: "/auth/login",
+        url: "/auth/admin-login",
         method: "POST",
         body: credentials,
       }),
@@ -14,50 +14,43 @@ export const authApi = baseApi.injectEndpoints({
 
     forgotEmail: builder.mutation({
       query: (forgotEmail) => ({
-        url: "/auth/forgot-password-otp",
+        url: "/auth/forget-password",
         method: "POST",
         body: forgotEmail,
       }),
     }),
 
-    forgotEmailOTPCheck: builder.mutation({
-      query: ({ otp, token }) => ({
-        url: "/auth/forgot-password-otp-match",
-        method: "PATCH",
-        headers: {
-          token: token,
-          "Content-Type": "application/json"
-        },
-        body: { otp },  // <-- must be an object
+    OtpCheck: builder.mutation({
+      query: (data) => ({
+        url: "/auth/verify-account",
+        method: "POST",
+        body: data,
       }),
     }),
 
     resendPassword: builder.mutation({
-      query: (token) => ({
-        url: "/otp/resend-otp",
-        method: "PATCH",
-        headers: {
-          token: token,
-          "Content-Type": "application/json"
-        },
+      query: ({ token, data }) => ({
+        url: `/auth/reset-password?token=${token}`,
+        method: "POST",
+        body: data,
       }),
     }),
-
-    resetPassword: builder.mutation({
-      query: ({ token, newPassword, confirmPassword }) => ({
-        url: "/auth/forgot-password-reset",
-        method: "PATCH",
-        headers: {
-          token: `${token}`,
-          "Content-Type": "application/json"
-        },
-        body: {
-          newPassword: newPassword,
-          confirmPassword: confirmPassword,
-        },
+    getProfile: builder.query({
+      query: () => ({
+        url: "/auth/profile",
+        method: "GET",
       }),
+      providesTags: ["Profile"],
     }),
 
+    updateProfile: builder.mutation({
+      query: (data) => ({
+        url: "/auth/update-profile",
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Profile"],
+    }),
   }),
 });
 
@@ -65,7 +58,8 @@ export const authApi = baseApi.injectEndpoints({
 export const {
   useLoginMutation,
   useForgotEmailMutation,
-  useForgotEmailOTPCheckMutation,
-  useResetPasswordMutation,
-  useResendPasswordMutation
+  useOtpCheckMutation,
+  useResendPasswordMutation,
+  useGetProfileQuery,
+  useUpdateProfileMutation,
 } = authApi;

@@ -2,7 +2,9 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useLoginMutation } from '@/features/auth/authApi';
 import { cn } from '@/lib/utils';
+import { saveToken } from '@/utils/storage';
 import { motion } from 'framer-motion';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
@@ -15,8 +17,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const [login, { data, isLoading, error }] = useLoginMutation();
 
   const router = useRouter();
 
@@ -46,14 +49,17 @@ export default function LoginPage() {
       return;
     }
 
-    setIsLoading(true);
-
-    // Simulate login delay
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success('Login successful!');
+    try {
+      const res: any = await login({ email, password }).unwrap();
+      toast.success(res.message);
+      saveToken(res?.data?.accessToken);
+      localStorage.setItem("refreshToken", res?.data?.refreshToken);
+      localStorage.setItem("role", res?.data?.role);
       router.push('/');
-    }, 1500);
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to login");
+    }
+
   };
 
   return (

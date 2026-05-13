@@ -1,11 +1,11 @@
 export const saveToken = (token) => {
-  localStorage.setItem("PharmacyAdmin", token);
+  localStorage.setItem("orienco-admin-dashboard", token);
 };
 
 export const getToken = () => {
-  return localStorage.getItem("PharmacyAdmin");
+  return localStorage.getItem("orienco-admin-dashboard");
 };
 
 export const removeToken = () => {
-  localStorage.removeItem("PharmacyAdmin");
+  localStorage.removeItem("orienco-admin-dashboard");
 };

@@ -1,5 +1,4 @@
-"use client";
-
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,19 +10,55 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
-import { Camera } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import Image from "next/image";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
+import { useGetProfileQuery, useUpdateProfileMutation } from "@/features/auth/authApi";
 
 const inputCls = "h-11 rounded-sm border text-sm px-4 focus-visible:ring-1 focus-visible:ring-[#FF4A00] focus-visible:border-[#FF4A00]";
 const inputStyle = { borderColor: "#F2F2F2", color: "#2C2E33", backgroundColor: "#FAFAFA" };
 
-const USER_AVATAR = "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=300&h=300&fit=crop&auto=format";
-
 export default function ProfileSettings() {
-  const handleSave = () => {
-    toast.success("Profile updated successfully!");
+  const { data: profileResponse, isLoading } = useGetProfileQuery({});
+  const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    image: "",
+  });
+
+  useEffect(() => {
+    if (profileResponse?.data) {
+      const user = profileResponse.data;
+      setFormData({
+        fullName: user.fullName || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        image: user.image || "",
+      });
+    }
+  }, [profileResponse]);
+
+  const handleSave = async () => {
+    try {
+      await updateProfile(formData).unwrap();
+      toast.success("Profile updated successfully!");
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to update profile");
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#FF4A00]" />
+      </div>
+    );
+  }
+
+  const user = profileResponse?.data;
 
   return (
     <div className="max-w-4xl space-y-6 pb-5">
@@ -37,14 +72,20 @@ export default function ProfileSettings() {
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
           <div className="relative group">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden relative border-4 border-white shadow-sm">
-              <Image
-                src={USER_AVATAR}
-                alt="Rasel Parvez"
-                fill
-                className="object-cover"
-                unoptimized
-              />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden relative border-4 border-white shadow-sm bg-gray-100">
+              {formData.image ? (
+                <Image
+                  src={formData.image}
+                  alt={formData.fullName}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[#FF4A00] text-3xl font-bold uppercase">
+                  {formData.fullName?.charAt(0)}
+                </div>
+              )}
             </div>
             <button className="absolute -bottom-2 -right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#2C2E33] flex items-center justify-center text-white border-2 border-white shadow-sm hover:scale-105 transition-transform cursor-pointer">
               <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -53,9 +94,9 @@ export default function ProfileSettings() {
 
           <div className="space-y-3 sm:space-y-4">
             <div>
-              <h2 className="text-lg sm:text-xl font-bold" style={{ color: "#2C2E33" }}>Personal Information</h2>
-              <p className="text-xs sm:text-sm font-medium" style={{ color: "#6C757D" }}>
-                Super Admin • Infrastructure &amp; Operations
+              <h2 className="text-lg sm:text-xl font-bold" style={{ color: "#2C2E33" }}>{formData.fullName || "Admin Profile"}</h2>
+              <p className="text-xs sm:text-sm font-medium uppercase tracking-widest" style={{ color: "#6C757D" }}>
+                {user?.role || "Super Admin"} • {user?.status || "Active"}
               </p>
             </div>
             <Button
@@ -70,38 +111,47 @@ export default function ProfileSettings() {
 
         {/* Form Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-          <div className="space-y-1.5 flex flex-col">
-            <Label className="text-sm font-semibold" style={{ color: "#2C2E33" }}>First Name</Label>
-            <Input className={inputCls} style={inputStyle} defaultValue="Rasel" />
-          </div>
-
-          <div className="space-y-1.5 flex flex-col">
-            <Label className="text-sm font-semibold" style={{ color: "#2C2E33" }}>Last Name</Label>
-            <Input className={inputCls} style={inputStyle} defaultValue="Parvez" />
+          <div className="space-y-1.5 flex flex-col md:col-span-2">
+            <Label className="text-sm font-semibold" style={{ color: "#2C2E33" }}>Full Name</Label>
+            <Input 
+              className={inputCls} 
+              style={inputStyle} 
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            />
           </div>
 
           <div className="space-y-1.5 flex flex-col md:col-span-2">
             <Label className="text-sm font-semibold" style={{ color: "#2C2E33" }}>Email Address</Label>
-            <Input className={inputCls} style={inputStyle} defaultValue="rasel@example.com" />
+            <Input 
+              className={inputCls} 
+              style={inputStyle} 
+              value={formData.email}
+              readOnly
+              disabled
+            />
           </div>
 
           <div className="space-y-1.5 flex flex-col">
             <Label className="text-sm font-semibold" style={{ color: "#2C2E33" }}>Phone Number</Label>
-            <Input className={inputCls} style={inputStyle} defaultValue="01721879586" />
+            <Input 
+              className={inputCls} 
+              style={inputStyle} 
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
           </div>
 
           <div className="space-y-1.5 flex flex-col">
-            <Label className="text-sm font-semibold" style={{ color: "#2C2E33" }}>Office Location</Label>
-            <Select defaultValue="Madrid">
-              <SelectTrigger className="h-11 py-5 w-full rounded-sm border" style={inputStyle}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Madrid">Madrid Headquarters</SelectItem>
-                <SelectItem value="Dubai">Dubai Office</SelectItem>
-                <SelectItem value="NewYork">New York Hub</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label className="text-sm font-semibold" style={{ color: "#2C2E33" }}>Role</Label>
+            <Input 
+              className={inputCls} 
+              style={inputStyle} 
+              value={user?.role || ""}
+              readOnly
+              disabled
+              className={cn(inputCls, "capitalize")}
+            />
           </div>
         </div>
       </motion.div>
@@ -122,14 +172,17 @@ export default function ProfileSettings() {
         </Button>
         <Button
           onClick={handleSave}
-          className="h-11 px-6 sm:px-10 rounded-sm font-semibold text-white cursor-pointer"
+          disabled={isUpdating}
+          className="h-11 px-6 sm:px-10 rounded-sm font-semibold text-white cursor-pointer min-w-[140px]"
           style={{ backgroundColor: "#FF4A00" }}
         >
-          Save Changes
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
         </Button>
       </motion.div>
 
     </div>
   );
 }
+
+import { cn } from "@/lib/utils";
 

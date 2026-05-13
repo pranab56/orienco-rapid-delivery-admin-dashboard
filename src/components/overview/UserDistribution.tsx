@@ -5,12 +5,12 @@ import { motion } from "framer-motion";
 import { Users } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
-const data = [
-  { name: "Driver", value: 65, color: "#FF4A00" },
-  { name: "User", value: 25, color: "#D9D9D9" },
-];
+export default function UserDistribution({ data }: { data: any }) {
+  const chartData = [
+    { name: "Driver", value: data?.driverPercentage || 0, color: "#FF4A00" },
+    { name: "User", value: data?.userPercentage || 0, color: "#D9D9D9" },
+  ];
 
-export default function UserDistribution() {
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -56,7 +56,7 @@ export default function UserDistribution() {
                   }}
                 />
                 <Pie
-                  data={data}
+                  data={chartData}
                   cx="50%"
                   cy="50%"
                   innerRadius="60%"
@@ -68,7 +68,7 @@ export default function UserDistribution() {
                   stroke="none"
                   cornerRadius={10}
                 >
-                  {data.map((entry, index) => (
+                  {chartData.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={entry.color} 
@@ -88,14 +88,14 @@ export default function UserDistribution() {
                 <div className="w-3 sm:w-3.5 h-3 sm:h-3.5 rounded-full bg-[#FF4A00]" />
                 <span className="text-xs sm:text-sm font-medium text-[#737780] tracking-wide">Driver</span>
               </div>
-              <span className="text-base sm:text-lg font-medium text-[#2C2E33]">65%</span>
+              <span className="text-base sm:text-lg font-medium text-[#2C2E33]">{data?.driverPercentage || 0}%</span>
             </div>
             <div className="flex justify-between items-center p-1 sm:p-2">
               <div className="flex items-center gap-3">
                 <div className="w-3 sm:w-3.5 h-3 sm:h-3.5 rounded-full bg-[#D9D9D9]" />
                 <span className="text-xs sm:text-sm font-medium text-[#737780] tracking-wide">User</span>
               </div>
-              <span className="text-base sm:text-lg font-medium text-[#2C2E33]">25%</span>
+              <span className="text-base sm:text-lg font-medium text-[#2C2E33]">{data?.userPercentage || 0}%</span>
             </div>
           </div>
         </CardContent>

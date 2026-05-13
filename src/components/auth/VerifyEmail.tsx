@@ -14,11 +14,12 @@ import { FormEvent, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { motion } from 'framer-motion';
+import { useOtpCheckMutation } from '@/features/auth/authApi';
 
 export default function VerifyEmail() {
   const [otp, setOtp] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [otpCheck, { isLoading }] = useOtpCheckMutation();
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,18 +33,13 @@ export default function VerifyEmail() {
       return;
     }
 
-    setIsLoading(true);
-
-    // Simulate API delay
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success('Email verified successfully!');
-
-      // Redirect to Reset Password
-      setTimeout(() => {
-        router.push('/auth/reset-password');
-      }, 1000);
-    }, 1500);
+    try {
+      const res = await otpCheck({ email, oneTimeCode: otp }).unwrap();
+      toast.success(res.message);
+      router.push(`/auth/reset-password?token=${res.data.token}`);
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Verification failed");
+    }
   };
 
   const handleResend = () => {

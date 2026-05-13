@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 
+import { getToken } from "@/utils/storage";
+
 interface ProtectedRouteProps {
   children: ReactNode;
 }
@@ -12,7 +14,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const token = localStorage.getItem("PharmacyAdmin");
+      const token = getToken();
 
 
       if (!token || token === null) {

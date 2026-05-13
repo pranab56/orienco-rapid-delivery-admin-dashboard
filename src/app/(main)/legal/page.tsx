@@ -1,10 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FileText, ShieldCheck, AlertCircle, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+    useCreateLegalMutation,
+    useGetPrivacyPolicyQuery,
+    useGetTermsAndConditionQuery,
+} from "@/features/legal/legalApi";
 
 // ─── Default Content ────────────────────────────────────────────────────────
 
@@ -52,27 +57,61 @@ If you have any questions about this Privacy Policy, please contact us at privac
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-type TabType = "terms" | "privacy";
+type TabType = "terms-and-condition" | "privacy-policy";
 
 export default function LegalPage() {
-    const [activeTab, setActiveTab] = useState<TabType>("terms");
+    const [activeTab, setActiveTab] = useState<TabType>("terms-and-condition");
     const [termsContent, setTermsContent] = useState(DEFAULT_TERMS);
     const [privacyContent, setPrivacyContent] = useState(DEFAULT_PRIVACY);
 
-    const content = activeTab === "terms" ? termsContent : privacyContent;
-    const setContent = activeTab === "terms" ? setTermsContent : setPrivacyContent;
-    const defaultContent = activeTab === "terms" ? DEFAULT_TERMS : DEFAULT_PRIVACY;
+    // Queries
+    const { data: termsData, isLoading: isTermsLoading } = useGetTermsAndConditionQuery(undefined, {
+        skip: activeTab !== "terms-and-condition"
+    });
+    const { data: privacyData, isLoading: isPrivacyLoading } = useGetPrivacyPolicyQuery(undefined, {
+        skip: activeTab !== "privacy-policy"
+    });
 
-    const handleSave = () => {
-        toast.success(
-            `${activeTab === "terms" ? "Terms & Conditions" : "Privacy Policy"} saved successfully`
-        );
+    // Mutation
+    const [createLegal, { isLoading: isSaving }] = useCreateLegalMutation();
+
+    // Sync state with fetched data
+    useEffect(() => {
+        if (termsData?.data?.content) {
+            setTermsContent(termsData.data.content);
+        }
+    }, [termsData]);
+
+    useEffect(() => {
+        if (privacyData?.data?.content) {
+            setPrivacyContent(privacyData.data.content);
+        }
+    }, [privacyData]);
+
+    const content = activeTab === "terms-and-condition" ? termsContent : privacyContent;
+    const setContent = activeTab === "terms-and-condition" ? setTermsContent : setPrivacyContent;
+    const defaultContent = activeTab === "terms-and-condition" ? DEFAULT_TERMS : DEFAULT_PRIVACY;
+
+    const handleSave = async () => {
+        try {
+            await createLegal({
+                type: activeTab,
+                content: content,
+            }).unwrap();
+            toast.success(
+                `${activeTab === "terms-and-condition" ? "Terms & Conditions" : "Privacy Policy"} saved successfully`
+            );
+        } catch (error: any) {
+            toast.error(error?.data?.message || "Failed to save content");
+        }
     };
 
     const handleReset = () => {
         setContent(defaultContent);
         toast.success("Content reset to default");
     };
+
+    const isLoading = activeTab === "terms-and-condition" ? isTermsLoading : isPrivacyLoading;
 
     return (
         <div className="max-w-5xl space-y-4 sm:space-y-6">
@@ -87,17 +126,17 @@ export default function LegalPage() {
                 {/* ── Tabs ── */}
                 <div className="flex border-b border-gray-200 overflow-x-auto no-scrollbar">
                     <button
-                        onClick={() => setActiveTab("terms")}
+                        onClick={() => setActiveTab("terms-and-condition")}
                         className={cn(
                             "flex items-center gap-2 px-6 sm:px-10 py-4 sm:py-5 text-sm sm:text-base font-medium transition-all relative cursor-pointer whitespace-nowrap",
-                            activeTab === "terms"
+                            activeTab === "terms-and-condition"
                                 ? "text-[#FF4A00]"
                                 : "text-gray-500 hover:text-gray-700"
                         )}
                     >
                         <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                         Terms & Conditions
-                        {activeTab === "terms" && (
+                        {activeTab === "terms-and-condition" && (
                             <motion.div
                                 layoutId="tab-underline"
                                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF4A00] rounded-t-full"
@@ -106,17 +145,17 @@ export default function LegalPage() {
                     </button>
 
                     <button
-                        onClick={() => setActiveTab("privacy")}
+                        onClick={() => setActiveTab("privacy-policy")}
                         className={cn(
                             "flex items-center gap-2 px-6 sm:px-10 py-4 sm:py-5 text-sm sm:text-base font-medium transition-all relative cursor-pointer whitespace-nowrap",
-                            activeTab === "privacy"
+                            activeTab === "privacy-policy"
                                 ? "text-[#FF4A00]"
                                 : "text-gray-500 hover:text-gray-700"
                         )}
                     >
                         <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                         Privacy Policy
-                        {activeTab === "privacy" && (
+                        {activeTab === "privacy-policy" && (
                             <motion.div
                                 layoutId="tab-underline"
                                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF4A00] rounded-t-full"
@@ -149,14 +188,20 @@ export default function LegalPage() {
                         </div>
 
                         {/* Text Editor */}
-                        <textarea
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            rows={12}
-                            spellCheck={false}
-                            className="w-full bg-[#FAFAFA] rounded-xl border border-gray-100 p-4 sm:p-6 font-mono text-xs sm:text-sm text-gray-700 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-[#FF4A00]/10 focus:border-[#FF4A00]/20 transition-all placeholder:text-gray-400"
-                            placeholder="Start typing your content..."
-                        />
+                        {isLoading ? (
+                            <div className="w-full h-64 flex items-center justify-center bg-gray-50 rounded-xl animate-pulse text-gray-400">
+                                Loading content...
+                            </div>
+                        ) : (
+                            <textarea
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                rows={12}
+                                spellCheck={false}
+                                className="w-full bg-[#FAFAFA] rounded-xl border border-gray-100 p-4 sm:p-6 font-mono text-xs sm:text-sm text-gray-700 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-[#FF4A00]/10 focus:border-[#FF4A00]/20 transition-all placeholder:text-gray-400"
+                                placeholder="Start typing your content..."
+                            />
+                        )}
 
                         {/* Actions */}
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
@@ -170,9 +215,10 @@ export default function LegalPage() {
 
                             <button
                                 onClick={handleSave}
-                                className="w-full sm:w-auto bg-[#FF4A00] hover:bg-[#e64300] text-white px-12 sm:px-16 h-10 sm:h-12 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold shadow-lg shadow-orange-100 transition-all active:scale-95 order-1 sm:order-2"
+                                disabled={isSaving}
+                                className="w-full sm:w-auto bg-[#FF4A00] hover:bg-[#e64300] text-white px-12 sm:px-16 h-10 sm:h-12 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold shadow-lg shadow-orange-100 transition-all active:scale-95 order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Save Changes
+                                {isSaving ? "Saving..." : "Save Changes"}
                             </button>
                         </div>
                     </motion.div>

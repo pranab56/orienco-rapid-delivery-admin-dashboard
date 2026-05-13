@@ -13,18 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const data = [
-  { name: "Jan", value: 4000 },
-  { name: "Feb", value: 6500 },
-  { name: "Mar", value: 4800 },
-  { name: "Apr", value: 8500 },
-  { name: "May", value: 12500 },
-  { name: "Ju", value: 6200 },
-  { name: "July", value: 5000 },
-];
-
-export default function SalesAnalytics() {
+export default function SalesAnalytics({ data, totalRevenue }: { data: any[], totalRevenue: number }) {
   const [period, setPeriod] = useState("july-dec");
+
+  const chartData = data?.map(item => ({
+    name: item.month,
+    value: item.revenue
+  })) || [];
 
   return (
     <motion.div
@@ -39,33 +34,14 @@ export default function SalesAnalytics() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1 sm:space-y-2">
               <h2 className="text-lg sm:text-xl font-medium text-[#2C2E33]">Sales Analytics</h2>
-              <p className="text-3xl sm:text-5xl font-medium text-[#2C2E33] tracking-tight">$46,650</p>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-              <button className="w-10 h-10 sm:w-13 sm:h-13 flex items-center justify-center bg-[#F1DED6] rounded-lg hover:bg-[#EACFC3] transition-all active:scale-95 shadow-sm shrink-0">
-                <Activity className="w-5 h-5 sm:w-7 sm:h-7 text-[#FF4A00]" />
-              </button>
-
-              <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="h-10 sm:h-12 flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-6 rounded-sm border border-gray-200 text-xs sm:text-sm font-medium text-[#737780] bg-white shadow-none cursor-pointer focus:ring-1 focus:ring-gray-200 min-w-[110px] sm:min-w-[130px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="z-[50] rounded-lg border border-gray-100 shadow-xl bg-white">
-                  <SelectItem value="jan-jun">Jan–Jun</SelectItem>
-                  <SelectItem value="july-dec">July–Dec</SelectItem>
-                  <SelectItem value="q1">Q1 (Jan–Mar)</SelectItem>
-                  <SelectItem value="q2">Q2 (Apr–Jun)</SelectItem>
-                  <SelectItem value="q3">Q3 (Jul–Sep)</SelectItem>
-                  <SelectItem value="q4">Q4 (Oct–Dec)</SelectItem>
-                </SelectContent>
-              </Select>
+              <p className="text-3xl sm:text-5xl font-medium text-[#2C2E33] tracking-tight">${totalRevenue?.toFixed(2) || "0.00"}</p>
             </div>
           </div>
 
           {/* Chart Section */}
           <div className="flex-1 w-full min-h-[300px] sm:min-h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} margin={{ top: 20, right: 10, left: -10, bottom: 0 }}>
+              <BarChart data={chartData} margin={{ top: 20, right: 10, left: -10, bottom: 0 }}>
                 <XAxis
                   dataKey="name"
                   axisLine={false}
@@ -89,10 +65,10 @@ export default function SalesAnalytics() {
                   radius={[16, 16, 16, 16]}
                   maxBarSize={55}
                 >
-                  {data.map((entry, index) => (
+                  {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={entry.name === "May" ? "#FF4A00" : "#D9D9D9"}
+                      fill={entry.value > 0 ? "#FF4A00" : "#D9D9D9"}
                       className="transition-all duration-300"
                     />
                   ))}
