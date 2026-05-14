@@ -55,7 +55,8 @@ export default function LoginPage() {
       saveToken(res?.data?.accessToken);
       localStorage.setItem("refreshToken", res?.data?.refreshToken);
       localStorage.setItem("role", res?.data?.role);
-      router.push('/');
+      // Hard redirect so the middleware reads the freshly-set cookie on the new request
+      window.location.href = '/';
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to login");
     }

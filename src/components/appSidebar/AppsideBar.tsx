@@ -26,7 +26,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { removeToken } from "@/utils/storage";
 
 const sections = [
   {
@@ -56,7 +57,6 @@ const sections = [
 
 export default function AppSideBar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { state, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
 
@@ -67,7 +67,8 @@ export default function AppSideBar() {
 
   const handleLogout = () => {
     setOpenMobile(false);
-    router.push("/auth/login");
+    removeToken();
+    window.location.href = "/auth/login";
   };
 
   return (

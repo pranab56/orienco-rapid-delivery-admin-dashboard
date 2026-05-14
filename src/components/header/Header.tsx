@@ -16,6 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { useGetUnReadCountQuery } from "@/features/notification/notificationApi";
+import { removeToken } from "@/utils/storage";
 
 const routeTitleMap: Record<string, string> = {
   "": "Overview",
@@ -33,6 +35,13 @@ const routeTitleMap: Record<string, string> = {
 
 export default function MyNavber() {
   const pathname = usePathname();
+  const { data: unreadResponse } = useGetUnReadCountQuery(undefined);
+  const unreadCount = unreadResponse?.data?.unreadCount || 0;
+
+  const handleLogout = () => {
+    removeToken();
+    window.location.href = "/auth/login";
+  };
 
   const getBreadcrumbs = () => {
     const parts = pathname.split("/").filter(Boolean);
@@ -74,7 +83,7 @@ export default function MyNavber() {
       </div>
 
       {/* ── Search Bar ── */}
-      <div className="flex-1 max-w-xl mx-2 md:mx-8 hidden sm:block">
+      {/* <div className="flex-1 max-w-xl mx-2 md:mx-8 hidden sm:block">
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF] transition-colors group-focus-within:text-[#FF4A00]" />
           <Input
@@ -82,7 +91,7 @@ export default function MyNavber() {
             className="h-12 w-full pl-12 pr-4 bg-white border-none shadow-none rounded-lg text-[#2C2E33] placeholder:text-[#737780] focus-visible:ring-1 focus-visible:ring-[#FF4A00]/20 transition-all font-normal whitespace-nowrap overflow-hidden"
           />
         </div>
-      </div>
+      </div> */}
 
       {/* ── Right Section ── */}
       <div className="flex items-center gap-4 md:gap-6 ml-auto sm:ml-0 shrink-0">
@@ -90,7 +99,11 @@ export default function MyNavber() {
         <Link href="/notification">
           <button className="relative w-12 h-12 flex items-center justify-center bg-white rounded-2xl cursor-pointer transition-colors group">
             <Bell className="w-6 h-6 text-[#2C2E33] transition-transform group-hover:rotate-12" />
-            <span className="absolute top-2.5 right-4 w-2 h-2 bg-[#FF4500] rounded-full border-2 border-[#D9D9D9]" />
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-[#FF4500] px-1 text-[10px] font-bold text-white border-2 border-white shadow-sm">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </button>
         </Link>
 
@@ -122,10 +135,11 @@ export default function MyNavber() {
                   <span className="text-base font-medium text-[#737780] group-hover:text-[#2C2E33]">My Profile</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className="flex items-center gap-4 px-6 py-5 cursor-pointer hover:bg-gray-200/50 transition-colors focus:bg-gray-200/80 outline-none group border-b border-gray-300/40">
-                <Link href="/auth/login">
-                  <span className="text-base font-medium text-[#737780] group-hover:text-[#2C2E33]">Logout</span>
-                </Link>
+              <DropdownMenuItem 
+                onClick={handleLogout}
+                className="flex items-center gap-4 px-6 py-5 cursor-pointer hover:bg-gray-200/50 transition-colors focus:bg-gray-200/80 outline-none group border-b border-gray-300/40"
+              >
+                <span className="text-base font-medium text-[#737780] group-hover:text-[#2C2E33]">Logout</span>
               </DropdownMenuItem>
             </div>
           </DropdownMenuContent>

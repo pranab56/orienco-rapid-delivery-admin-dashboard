@@ -12,9 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "../ui/skeleton";
+import LoadingSpin from "../LoadingSpin";
 
-export default function SalesAnalytics({ data, totalRevenue }: { data: any[], totalRevenue: number }) {
-  const [period, setPeriod] = useState("july-dec");
+export default function SalesAnalytics({ data, loading, totalRevenue }: { data: any[], totalRevenue: number, loading: boolean }) {
 
   const chartData = data?.map(item => ({
     name: item.month,
@@ -22,10 +23,7 @@ export default function SalesAnalytics({ data, totalRevenue }: { data: any[], to
   })) || [];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.3, duration: 0.6 }}
+    <div
       className="h-full"
     >
       <Card className="border-none shadow-sm rounded-lg overflow-visible h-full flex flex-col p-0">
@@ -39,7 +37,11 @@ export default function SalesAnalytics({ data, totalRevenue }: { data: any[], to
           </div>
 
           {/* Chart Section */}
-          <div className="flex-1 w-full min-h-[300px] sm:min-h-[400px]">
+          {loading ? (
+            <div className="flex items-center justify-center h-[340px]">
+              <LoadingSpin />
+            </div>
+          ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 20, right: 10, left: -10, bottom: 0 }}>
                 <XAxis
@@ -75,9 +77,9 @@ export default function SalesAnalytics({ data, totalRevenue }: { data: any[], to
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          )}
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }

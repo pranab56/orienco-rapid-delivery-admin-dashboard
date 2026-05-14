@@ -114,18 +114,15 @@ export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
 
         <div className="w-px h-4 bg-gray-300 mx-1" />
 
-        <ToolbarButton onClick={setLink} isActive={editor.isActive("link")}>
-          <Link2 className="w-4 h-4" />
-        </ToolbarButton>
         <ToolbarButton onClick={toggleCode} isActive={editor.isActive("code")}>
           <Code className="w-4 h-4" />
         </ToolbarButton>
 
         <div className="flex-1" />
 
-        <button type="button" className="p-1.5 rounded hover:bg-white transition-colors cursor-pointer text-gray-600">
+        {/* <button type="button" className="p-1.5 rounded hover:bg-white transition-colors cursor-pointer text-gray-600">
           <Maximize2 className="w-4 h-4" />
-        </button>
+        </button> */}
       </div>
 
       {/* Editor Content */}

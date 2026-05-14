@@ -3,8 +3,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Bike, DollarSign, Package, Users } from "lucide-react";
+import { Skeleton } from "../ui/skeleton";
 
-export default function CardStates({ data }: { data: any }) {
+export default function CardStates({ data, loading }: { data: any, loading: boolean }) {
   const stats = [
     { title: "TOTAL REVENUE", value: `$${data?.totalRevenue?.toFixed(2) || "0.00"}`, icon: DollarSign },
     { title: "TOTAL USERS", value: data?.totalUsers?.toString() || "0", icon: Users },
@@ -15,12 +16,7 @@ export default function CardStates({ data }: { data: any }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
       {stats.map((stat, index) => (
-        <motion.div
-          key={stat.title}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
-        >
+        <div>
           <Card className="rounded-lg h-full py-5 sm:py-7 overflow-hidden group hover:shadow-md transition-shadow duration-300">
             <CardContent className=" flex flex-col gap-4 sm:gap-6">
               {/* Icon Container */}
@@ -30,15 +26,15 @@ export default function CardStates({ data }: { data: any }) {
 
               <div className="space-y-1">
                 <p className="text-[10px] sm:text-[11px] font-medium tracking-[0.1em] text-[#9CA3AF]">
-                   {stat.title}
+                  {stat.title}
                 </p>
                 <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#2C2E33]">
-                   {stat.value}
+                  {loading ? <Skeleton className="h-10 w-20 rounded-lg" /> : stat.value}
                 </p>
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       ))}
     </div>
   );

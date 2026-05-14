@@ -66,7 +66,7 @@ export default function ContactUsDetails({ id }: ContactUsDetailsProps) {
   }
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-right duration-500 pb-10">
+    <div className="space-y-8 pb-10">
       {/* ── Breadcrumbs / Header ── */}
       <div className="space-y-6">
         <Link

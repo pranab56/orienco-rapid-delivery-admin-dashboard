@@ -25,6 +25,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,7 +60,7 @@ export default function UsersManagementDetails({ id }: UsersManagementDetailsPro
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF4A00]" />
+        <LoadingSpin />
       </div>
     );
   }
@@ -64,9 +70,9 @@ export default function UsersManagementDetails({ id }: UsersManagementDetailsPro
   const isDriver = user.role === "driver";
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-right duration-500 pb-10">
+    <div className="space-y-8 pb-10">
       {/* ── Breadcrumbs / Action ── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <button
           onClick={() => router.back()}
           className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
@@ -109,7 +115,7 @@ export default function UsersManagementDetails({ id }: UsersManagementDetailsPro
       </div>
 
       <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-medium ">View User Details</h1>
+        <h1 className="text-2xl sm:text-3xl font-medium">View User Details</h1>
         <p className="text-sm sm:text-base text-gray-500 font-normal">Complete information about this user account.</p>
       </div>
 
@@ -174,10 +180,19 @@ export default function UsersManagementDetails({ id }: UsersManagementDetailsPro
                       <div className="w-10 h-10 flex items-center justify-center shrink-0 border border-gray-50 rounded-lg">
                         <Wallet className="w-5 h-5 text-green-500" />
                       </div>
-                      <div className="text-left">
-                        <p className="text-sm font-bold text-gray-400 tracking-widest uppercase">Total Earnings</p>
-                        <p className="text-sm font-medium text-gray-700">${user?.driverInfo?.totalEarnings}</p>
-                      </div>
+                      {
+                        user?.driverInfo?.totalEarnings ? (
+                          <div className="text-left">
+                            <p className="text-sm font-bold text-gray-400 tracking-widest uppercase">Total Earnings</p>
+                            <p className="text-sm font-medium text-gray-700">${user?.driverInfo?.totalEarnings}</p>
+                          </div>
+                        ) : (
+                          <div className="text-left">
+                            <p className="text-sm font-bold text-gray-400 tracking-widest uppercase">Total Earnings</p>
+                            <p className="text-sm font-medium text-gray-700">$0.00</p>
+                          </div>
+                        )
+                      }
                     </div>
                   </>
                 )}
@@ -233,9 +248,24 @@ export default function UsersManagementDetails({ id }: UsersManagementDetailsPro
                       <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">NID Card</p>
                       <div className="grid grid-cols-2 gap-4">
                         {user.driverInfo?.nid?.length > 0 ? user.driverInfo.nid.map((img: string, i: number) => (
-                          <div key={i} className="aspect-[3/2] bg-gray-100 rounded-xl overflow-hidden border border-gray-200 relative group">
-                            <Image src={img} alt={`NID ${i}`} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
-                          </div>
+                          <Dialog key={i}>
+                            <DialogTrigger asChild>
+                              <div className="aspect-[3/2] bg-gray-100 rounded-xl overflow-hidden border border-gray-200 relative group cursor-pointer hover:shadow-md transition-shadow">
+                                <Image src={img} alt={`NID ${i}`} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                  <div className="bg-white/90 text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                                    Click to view
+                                  </div>
+                                </div>
+                              </div>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl border-none p-0 bg-transparent shadow-none">
+                              <DialogTitle className="sr-only">NID Image</DialogTitle>
+                              <div className="relative w-full h-[80vh] bg-black/20 rounded-2xl overflow-hidden backdrop-blur-sm">
+                                <Image src={img} alt={`NID ${i}`} fill className="object-contain" unoptimized />
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         )) : (
                           <div className="col-span-2 py-8 text-center text-sm text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                             No NID documents uploaded
@@ -247,9 +277,24 @@ export default function UsersManagementDetails({ id }: UsersManagementDetailsPro
                       <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Driving License</p>
                       <div className="grid grid-cols-2 gap-4">
                         {user.driverInfo?.drivingLicense?.length > 0 ? user.driverInfo.drivingLicense.map((img: string, i: number) => (
-                          <div key={i} className="aspect-[3/2] bg-gray-100 rounded-xl overflow-hidden border border-gray-200 relative group">
-                            <Image src={img} alt={`License ${i}`} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
-                          </div>
+                          <Dialog key={i}>
+                            <DialogTrigger asChild>
+                              <div className="aspect-[3/2] bg-gray-100 rounded-xl overflow-hidden border border-gray-200 relative group cursor-pointer hover:shadow-md transition-shadow">
+                                <Image src={img} alt={`License ${i}`} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                  <div className="bg-white/90 text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                                    Click to view
+                                  </div>
+                                </div>
+                              </div>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl border-none p-0 bg-transparent shadow-none">
+                              <DialogTitle className="sr-only">Driving License Image</DialogTitle>
+                              <div className="relative w-full h-[80vh] bg-black/20 rounded-2xl overflow-hidden backdrop-blur-sm">
+                                <Image src={img} alt={`License ${i}`} fill className="object-contain" unoptimized />
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         )) : (
                           <div className="col-span-2 py-8 text-center text-sm text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                             No license documents uploaded
@@ -268,4 +313,5 @@ export default function UsersManagementDetails({ id }: UsersManagementDetailsPro
   );
 }
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"; import LoadingSpin from "../LoadingSpin";
+

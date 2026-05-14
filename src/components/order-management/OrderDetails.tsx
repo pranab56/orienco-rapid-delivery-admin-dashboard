@@ -45,33 +45,33 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
   }
 
   const stats = [
-    { 
-      label: "Date & Time", 
-      value: new Date(parcel.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), 
-      sub: new Date(parcel.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }), 
-      icon: Calendar, 
-      color: "text-red-400" 
+    {
+      label: "Date & Time",
+      value: new Date(parcel.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      sub: new Date(parcel.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      icon: Calendar,
+      color: "text-red-400"
     },
-    { 
-      label: "Parcel Type", 
-      value: parcel.name, 
-      sub: parcel.vehicleType.toUpperCase(), 
-      icon: Box, 
-      color: "text-red-400" 
+    {
+      label: "Parcel Type",
+      value: parcel.name,
+      sub: parcel.vehicleType.toUpperCase(),
+      icon: Box,
+      color: "text-red-400"
     },
-    { 
-      label: "Distance", 
-      value: `${parcel.distance.toFixed(1)} km`, 
-      sub: "Delivery Route", 
-      icon: MapIcon, 
-      color: "text-red-400" 
+    {
+      label: "Distance",
+      value: `${parcel.distance.toFixed(1)} km`,
+      sub: "Delivery Route",
+      icon: MapIcon,
+      color: "text-red-400"
     },
-    { 
-      label: "Duration", 
-      value: parcel.duration, 
-      sub: "Estimated Time", 
-      icon: Clock, 
-      color: "text-red-400" 
+    {
+      label: "Duration",
+      value: parcel.duration,
+      sub: "Estimated Time",
+      icon: Clock,
+      color: "text-red-400"
     },
   ];
 
@@ -109,7 +109,7 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
                 <div className="relative">
                   <div className="absolute -left-8 top-1.5 w-2 h-2 rounded-full bg-red-400 ring-4 ring-red-400/10" />
                   <div className="space-y-1">
-                    <p className="text-sm font-bold text-[#2C2E33]">Pickup</p>
+                    <p className="text-sm font-medium text-[#2C2E33]">Pickup</p>
                     <p className="text-sm font-medium text-gray-500">{parcel.pickupLocation.address}</p>
                   </div>
                 </div>
@@ -117,7 +117,7 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
                 <div className="relative">
                   <div className="absolute -left-8 top-1.5 w-2 h-2 rounded-full bg-[#1A365D]" />
                   <div className="space-y-1">
-                    <p className="text-sm font-bold text-[#2C2E33]">Dropoff</p>
+                    <p className="text-sm font-medium text-[#2C2E33]">Dropoff</p>
                     <p className="text-sm font-medium text-gray-500">{parcel.dropLocation.address}</p>
                   </div>
                 </div>
@@ -147,7 +147,7 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
                   <stat.icon className={cn("w-6 h-6", stat.color)} />
                   <div className="space-y-1">
                     <p className="text-sm font-normal text-gray-400">{stat.label}</p>
-                    <p className="text-sm font-bold text-[#2C2E33] leading-none">{stat.value}</p>
+                    <p className="text-sm font-medium text-[#2C2E33] leading-none">{stat.value}</p>
                     <p className="text-xs font-normal text-gray-500">{stat.sub}</p>
                   </div>
                 </CardContent>
@@ -162,7 +162,7 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
                 <FileText className="w-5 h-5 text-gray-500" />
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-bold text-[#2C2E33]">Note</p>
+                <p className="text-xs font-medium text-[#2C2E33]">Note</p>
                 <p className="text-sm font-medium text-gray-500">
                   {parcel.note || "No additional notes provided for this delivery."}
                 </p>
@@ -177,23 +177,23 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
           {/* Driver Information Card */}
           <Card className="border-none shadow-none bg-white rounded-xl overflow-hidden p-2">
             <CardContent className="p-4 space-y-6">
-              <p className="text-sm font-bold text-[#2C2E33]">Driver Information</p>
+              <p className="text-sm font-medium text-[#2C2E33]">Driver Information</p>
               {parcel.driver ? (
                 <div className="flex items-center gap-4 pt-2">
                   <div className="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden border-2 border-white shadow-sm ring-1 ring-gray-100/50 shrink-0">
                     {parcel.driver.image ? (
                       <img src={parcel.driver.image} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-[#1A365D] flex items-center justify-center text-white font-bold text-xl">
+                      <div className="w-full h-full bg-[#1A365D] flex items-center justify-center text-white font-medium text-xl">
                         {parcel.driver.fullName.charAt(0)}
                       </div>
                     )}
                   </div>
                   <div className="space-y-1 min-w-0">
-                    <p className="text-base font-bold text-[#2C2E33] truncate">{parcel.driver.fullName}</p>
+                    <p className="text-base font-medium text-[#2C2E33] truncate">{parcel.driver.fullName}</p>
                     <div className="flex items-center gap-1.5">
                       <Star className="w-3.5 h-3.5 text-red-400 fill-red-400" />
-                      <span className="text-xs font-bold text-red-400">
+                      <span className="text-xs font-medium text-red-400">
                         {parcel.driver.averageRating || 0} Rating
                       </span>
                     </div>
@@ -215,10 +215,10 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
                 <div className="p-2 bg-white rounded-lg border border-gray-100 shadow-sm">
                   <Package className="w-4 h-4 text-[#FF4A00]" />
                 </div>
-                <p className="text-base font-bold text-[#2C2E33]">Sender Info</p>
+                <p className="text-base font-medium text-[#2C2E33]">Sender Info</p>
               </div>
               <div className="space-y-4">
-                <p className="text-lg font-bold text-[#2C2E33]">{parcel.sender.fullName}</p>
+                <p className="text-lg font-medium text-[#2C2E33]">{parcel.sender.fullName}</p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
                     <Mail className="w-4 h-4 opacity-40 shrink-0" />
@@ -243,10 +243,10 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
                 <div className="p-2 bg-white rounded-lg border border-gray-100 shadow-sm">
                   <User className="w-4 h-4 text-[#FF4A00]" />
                 </div>
-                <p className="text-base font-bold text-[#2C2E33]">Receiver Info</p>
+                <p className="text-base font-medium text-[#2C2E33]">Receiver Info</p>
               </div>
               <div className="space-y-4">
-                <p className="text-lg font-bold text-[#2C2E33]">{parcel.receiverName}</p>
+                <p className="text-lg font-medium text-[#2C2E33]">{parcel.receiverName}</p>
                 <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
                   <Phone className="w-4 h-4 opacity-40 shrink-0" />
                   {parcel.receiverPhone}
@@ -261,7 +261,7 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
           {/* Price Breakdown Card */}
           <Card className="border-none shadow-none bg-white rounded-xl p-6 overflow-hidden relative shadow-sm border border-gray-100">
             <CardContent className="p-0 space-y-8">
-              <p className="text-base font-bold text-[#2C2E33]">Price Breakdown</p>
+              <p className="text-base font-medium text-[#2C2E33]">Price Breakdown</p>
 
               <div className="space-y-4">
                 <div className="flex justify-between text-base font-medium text-gray-500">
@@ -275,8 +275,8 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
               </div>
 
               <div className="flex justify-between items-end pt-6 border-t border-gray-100">
-                <span className="text-xl font-bold text-[#2C2E33]">Total Fee</span>
-                <span className="text-3xl font-bold text-[#FF4A00]">${parcel.totalDeliveryFee.toFixed(2)}</span>
+                <span className="text-xl font-medium text-[#2C2E33]">Total Fee</span>
+                <span className="text-3xl font-medium text-[#FF4A00]">${parcel.totalDeliveryFee.toFixed(2)}</span>
               </div>
             </CardContent>
           </Card>

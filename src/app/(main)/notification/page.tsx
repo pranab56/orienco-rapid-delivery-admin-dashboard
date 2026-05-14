@@ -19,11 +19,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   useGetAllNotificationsQuery,
-  useMarkAllReadMutation,
-  useMarkAsReadMutation,
-  useDeleteNotificationMutation,
-  useDeleteAllNotificationsMutation,
+  useGetUnReadCountQuery,
 } from "@/features/notification/notificationApi";
+import LoadingSpin from "@/components/LoadingSpin";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,12 +29,23 @@ type NotifCategory = "order" | "driver" | "alert" | "system" | "promo";
 
 interface Notification {
   _id: string;
-  category: NotifCategory;
+  category?: NotifCategory;
+  screen?: string;
   title: string;
   message: string;
   createdAt: string;
   read: boolean;
 }
+
+const mapScreenToCategory = (screen?: string): NotifCategory => {
+  if (!screen) return "system";
+  const s = screen.toLowerCase();
+  if (s.includes("order") || s.includes("parcel")) return "order";
+  if (s.includes("driver") || s.includes("rider")) return "driver";
+  if (s.includes("contact") || s.includes("support")) return "alert";
+  if (s.includes("promo")) return "promo";
+  return "system";
+};
 
 // ─── Category Config ──────────────────────────────────────────────────────────
 
@@ -60,57 +69,36 @@ type FilterTab = typeof filterTabs[number];
 
 export default function NotificationPage() {
   const [activeFilter, setActiveFilter] = useState<FilterTab>("All");
-  
-  const { data: response, isLoading } = useGetAllNotificationsQuery({});
-  const [markAllRead] = useMarkAllReadMutation();
-  const [markAsRead] = useMarkAsReadMutation();
-  const [deleteNotif] = useDeleteNotificationMutation();
-  const [deleteAll] = useDeleteAllNotificationsMutation();
 
-  const notifications: Notification[] = response?.data || [];
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const { data: response, isLoading } = useGetAllNotificationsQuery({ page: 1, limit: 100 });
+  const { data: unreadResponse } = useGetUnReadCountQuery(undefined);
+
+  const notifications: Notification[] = response?.data?.notifications || [];
+  const unreadCount = unreadResponse?.data?.unreadCount || 0;
 
   const filtered = notifications.filter((n) => {
     if (activeFilter === "All") return true;
     if (activeFilter === "Unread") return !n.read;
-    return n.category === activeFilter.toLowerCase();
+    const cat = mapScreenToCategory(n.screen);
+    return cat === activeFilter.toLowerCase();
   });
 
   const handleMarkAllRead = async () => {
-    try {
-      await markAllRead({}).unwrap();
-      toast.success("All notifications marked as read");
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to mark all as read");
-    }
+    toast.error("Mark all as read is not implemented yet on the backend");
   };
 
   const handleClearAll = async () => {
-    try {
-      await deleteAll({}).unwrap();
-      toast.success("All notifications cleared");
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to clear notifications");
-    }
+    toast.error("Clear all is not implemented yet on the backend");
   };
 
   const handleMarkRead = async (id: string, alreadyRead: boolean) => {
     if (alreadyRead) return;
-    try {
-      await markAsRead(id).unwrap();
-    } catch (error) {
-      console.error("Failed to mark notification as read", error);
-    }
+    // Will be implemented later
   };
 
   const handleRemove = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    try {
-      await deleteNotif(id).unwrap();
-      toast.success("Notification deleted");
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to delete notification");
-    }
+    toast.error("Delete notification is not implemented yet on the backend");
   };
 
   const formatTime = (dateStr: string) => {
@@ -119,7 +107,7 @@ export default function NotificationPage() {
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
-    
+
     if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins} min ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
@@ -142,57 +130,13 @@ export default function NotificationPage() {
             )}
           </p>
         </div>
-
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Button
-            variant="outline"
-            onClick={handleMarkAllRead}
-            disabled={unreadCount === 0 || isLoading}
-            className="flex-1 sm:flex-none h-10 sm:h-11 px-4 sm:px-6 rounded-lg border-gray-200 text-xs sm:text-sm font-medium text-[#2C2E33] hover:bg-gray-50 cursor-pointer disabled:opacity-40"
-          >
-            <CheckCheck className="w-4 h-4 mr-2" />
-            Mark read
-          </Button>
-          <Button
-            onClick={handleClearAll}
-            disabled={notifications.length === 0 || isLoading}
-            className="flex-1 sm:flex-none h-10 sm:h-11 px-4 sm:px-6 rounded-lg bg-[#FF4A00] hover:bg-[#e64300] text-white text-xs sm:text-sm font-medium shadow-lg shadow-orange-100 cursor-pointer disabled:opacity-40"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Clear All
-          </Button>
-        </div>
       </div>
-
-      {/* ── Filter Tabs ── */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0 sm:flex-wrap">
-        {filterTabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveFilter(tab)}
-            className={cn(
-              "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap",
-              activeFilter === tab
-                ? "bg-[#FF4A00] text-white shadow-lg shadow-orange-100"
-                : "bg-white text-[#737780] hover:bg-gray-100 border border-gray-200"
-            )}
-          >
-            {tab}
-            {tab === "Unread" && unreadCount > 0 && (
-              <span className="ml-2 w-4 h-4 sm:w-5 sm:h-5 inline-flex items-center justify-center rounded-full bg-white/30 text-[9px] sm:text-[10px] font-bold">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
       {/* ── Notification List ── */}
-      <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[300px]">
+      <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm overflow-hidden ">
         <AnimatePresence initial={false} mode="popLayout">
           {isLoading ? (
             <div className="flex items-center justify-center py-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF4A00]" />
+              <LoadingSpin />
             </div>
           ) : filtered.length === 0 ? (
             <motion.div
@@ -210,7 +154,8 @@ export default function NotificationPage() {
             </motion.div>
           ) : (
             filtered.map((notif, index) => {
-              const cfg = categoryConfig[notif.category] || categoryConfig.system;
+              const category = mapScreenToCategory(notif.screen);
+              const cfg = categoryConfig[category] || categoryConfig.system;
               const Icon = cfg.icon;
 
               return (
@@ -252,16 +197,6 @@ export default function NotificationPage() {
                         <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed line-clamp-2">
                           {notif.message}
                         </p>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="absolute right-2 top-4 sm:relative sm:right-0 sm:top-0 flex items-center gap-1 shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={(e) => handleRemove(e, notif._id)}
-                          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors cursor-pointer"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
                       </div>
                     </div>
 

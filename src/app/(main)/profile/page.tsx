@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,23 +16,51 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import {
+  useGetProfileQuery,
+  useUpdateProfileMutation,
+  useChangePasswordMutation,
+} from "@/features/profile/profileApi";
+import LoadingSpin from "@/components/LoadingSpin";
 
 export default function ProfilePage() {
+  const { data: profileData, isLoading } = useGetProfileQuery(undefined);
+  const [updateProfile, { isLoading: isUpdatingProfile }] = useUpdateProfileMutation();
+  const [changePassword, { isLoading: isUpdatingPassword }] = useChangePasswordMutation();
+
   const [formData, setFormData] = useState({
-    firstName: "Rasel",
-    lastName: "Parvez",
-    email: "rasel.parvez@example.com",
-    phone: "+880 1712 345678",
-    address: "House 12, Road 5, Dhanmondi, Dhaka",
+    fullName: "",
+    email: "",
+    phone: "",
+    address: "",
     oldPassword: "",
     newPassword: "",
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (profileData?.data) {
+      const { fullName, email, phone, address, image } = profileData.data;
+      setFormData(prev => ({
+        ...prev,
+        fullName: fullName || "",
+        email: email || "",
+        phone: phone || "",
+        address: address || ""
+      }));
+      if (image) {
+        setProfileImage(image);
+      }
+    }
+  }, [profileData]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -48,6 +76,7 @@ export default function ProfilePage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImage(reader.result as string);
@@ -58,8 +87,7 @@ export default function ProfilePage() {
 
   const validateProfile = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.firstName) newErrors.firstName = "First name is required";
-    if (!formData.lastName) newErrors.lastName = "Last name is required";
+    if (!formData.fullName) newErrors.fullName = "Full name is required";
     if (!formData.email) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email format";
     if (!formData.phone) newErrors.phone = "Phone number is required";
@@ -73,28 +101,61 @@ export default function ProfilePage() {
     const newErrors: Record<string, string> = {};
     if (!formData.oldPassword) newErrors.oldPassword = "Old password is required";
     if (!formData.newPassword) newErrors.newPassword = "New password is required";
+    if (!formData.confirmPassword) newErrors.confirmPassword = "Confirm password is required";
     else if (formData.newPassword.length < 6) newErrors.newPassword = "Password must be at least 6 characters";
+    else if (formData.newPassword !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleUpdateProfile = () => {
+  const handleUpdateProfile = async () => {
     if (validateProfile()) {
-      toast.success("Profile updated successfully");
+      try {
+        const formDataPayload = new FormData();
+        formDataPayload.append("fullName", formData.fullName);
+        formDataPayload.append("address", formData.address);
+        formDataPayload.append("phone", formData.phone);
+        if (selectedImageFile) {
+          formDataPayload.append("image", selectedImageFile);
+        }
+
+        await updateProfile(formDataPayload).unwrap();
+        toast.success("Profile updated successfully");
+      } catch (error: any) {
+        toast.error(error?.data?.message || "Failed to update profile");
+      }
     } else {
       toast.error("Please fill all required profile fields correctly");
     }
   };
 
-  const handleUpdatePassword = () => {
+  const handleUpdatePassword = async () => {
     if (validatePassword()) {
-      toast.success("Password updated successfully");
-      setFormData(prev => ({ ...prev, oldPassword: "", newPassword: "" }));
+      try {
+        await changePassword({
+          currentPassword: formData.oldPassword,
+          newPassword: formData.newPassword,
+          confirmPassword: formData.confirmPassword
+        }).unwrap();
+        toast.success("Password updated successfully");
+        setFormData(prev => ({ ...prev, oldPassword: "", newPassword: "", confirmPassword: "" }));
+      } catch (error: any) {
+        toast.error(error?.data?.message || "Failed to update password");
+      }
     } else {
       toast.error("Please fill all required password fields correctly");
     }
   };
+
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[500px]">
+        <LoadingSpin />
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -112,7 +173,7 @@ export default function ProfilePage() {
               <Avatar className="w-28 h-28 sm:w-32 sm:h-32 border-4 border-white shadow-xl">
                 <AvatarImage src={profileImage || ""} />
                 <AvatarFallback className="bg-[#F1DED6] text-[#FF4A00] text-2xl sm:text-3xl font-bold">
-                  {formData.firstName[0]}{formData.lastName[0]}
+                  {formData.fullName?.charAt(0)?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
               <button
@@ -131,7 +192,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-1 text-center sm:text-left">
-              <h2 className="text-xl sm:text-2xl font-semibold text-[#2C2E33]">{formData.firstName} {formData.lastName}</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold text-[#2C2E33]">{formData.fullName}</h2>
               <p className="text-sm sm:text-base text-gray-500 flex items-center justify-center sm:justify-start gap-2">
                 <Mail className="w-4 h-4" />
                 {formData.email}
@@ -140,32 +201,18 @@ export default function ProfilePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-            <div className="space-y-2">
-              <Label className="text-xs sm:text-sm font-semibold text-gray-700 ml-1">First Name</Label>
+            <div className="space-y-2 md:col-span-2">
+              <Label className="text-xs sm:text-sm font-semibold text-gray-700 ml-1">Full Name</Label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <Input
-                  value={formData.firstName}
-                  onChange={(e) => handleChange("firstName", e.target.value)}
-                  className={`pl-11 sm:pl-12 h-12 sm:h-14 bg-gray-50/30 border-gray-100 rounded-lg sm:rounded-xl text-sm sm:text-base focus:bg-white transition-all ${errors.firstName ? "border-red-500 ring-1 ring-red-500" : "focus:ring-[#FF4A00]/20 focus:border-[#FF4A00]/30"
+                  value={formData.fullName}
+                  onChange={(e) => handleChange("fullName", e.target.value)}
+                  className={`pl-11 sm:pl-12 h-12 sm:h-14 bg-gray-50/30 border-gray-100 rounded-lg sm:rounded-xl text-sm sm:text-base focus:bg-white transition-all ${errors.fullName ? "border-red-500 ring-1 ring-red-500" : "focus:ring-[#FF4A00]/20 focus:border-[#FF4A00]/30"
                     }`}
                 />
               </div>
-              {errors.firstName && <p className="text-red-500 text-[10px] sm:text-xs font-medium ml-1 mt-1">{errors.firstName}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs sm:text-sm font-semibold text-gray-700 ml-1">Last Name</Label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <Input
-                  value={formData.lastName}
-                  onChange={(e) => handleChange("lastName", e.target.value)}
-                  className={`pl-11 sm:pl-12 h-12 sm:h-14 bg-gray-50/30 border-gray-100 rounded-lg sm:rounded-xl text-sm sm:text-base focus:bg-white transition-all ${errors.lastName ? "border-red-500 ring-1 ring-red-500" : "focus:ring-[#FF4A00]/20 focus:border-[#FF4A00]/30"
-                    }`}
-                />
-              </div>
-              {errors.lastName && <p className="text-red-500 text-[10px] sm:text-xs font-medium ml-1 mt-1">{errors.lastName}</p>}
+              {errors.fullName && <p className="text-red-500 text-[10px] sm:text-xs font-medium ml-1 mt-1">{errors.fullName}</p>}
             </div>
 
             <div className="space-y-2">
@@ -215,9 +262,10 @@ export default function ProfilePage() {
           <div className="flex justify-end pt-2">
             <button
               onClick={handleUpdateProfile}
-              className="w-full sm:w-auto bg-[#FF4A00] hover:bg-[#E64200] text-white px-8 sm:px-10 h-11 sm:h-12 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-orange-100 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              disabled={isUpdatingProfile}
+              className="w-full sm:w-auto bg-[#FF4A00] hover:bg-[#E64200] text-white px-8 sm:px-10 h-11 sm:h-12 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-orange-100 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Update Profile
+              {isUpdatingProfile ? "Updating..." : "Update Profile"}
             </button>
           </div>
         </section>
@@ -235,7 +283,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 pb-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 pb-2">
               <div className="space-y-2">
                 <Label className="text-xs sm:text-sm font-semibold text-gray-700 ml-1">Old Password</Label>
                 <div className="relative">
@@ -281,14 +329,38 @@ export default function ProfilePage() {
                 </div>
                 {errors.newPassword && <p className="text-red-500 text-[10px] sm:text-xs font-medium ml-1 mt-1">{errors.newPassword}</p>}
               </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs sm:text-sm font-semibold text-gray-700 ml-1">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                    placeholder="Enter confirm password"
+                    className={`pl-11 sm:pl-12 pr-12 h-12 sm:h-14 bg-gray-50/30 border-gray-100 rounded-lg sm:rounded-xl text-sm sm:text-base focus:bg-white transition-all ${errors.confirmPassword ? "border-red-500 ring-1 ring-red-500" : "focus:ring-[#FF4A00]/20 focus:border-[#FF4A00]/30"
+                      }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <p className="text-red-500 text-[10px] sm:text-xs font-medium ml-1 mt-1">{errors.confirmPassword}</p>}
+              </div>
             </div>
 
             <div className="flex justify-end pt-2">
               <button
                 onClick={handleUpdatePassword}
-                className="w-full sm:w-auto bg-[#FF4A00] hover:bg-[#E64200] text-white px-8 sm:px-10 h-11 sm:h-12 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-orange-100 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                disabled={isUpdatingPassword}
+                className="w-full sm:w-auto bg-[#FF4A00] hover:bg-[#E64200] text-white px-8 sm:px-10 h-11 sm:h-12 rounded-lg text-sm sm:text-base font-semibold shadow-lg shadow-orange-100 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Update Password
+                {isUpdatingPassword ? "Updating..." : "Update Password"}
               </button>
             </div>
           </div>

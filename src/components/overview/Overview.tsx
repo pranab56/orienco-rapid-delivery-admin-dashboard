@@ -46,7 +46,7 @@ function OverviewLoading() {
 export default function Overview() {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());
-  
+
   const years = [
     currentYear,
     currentYear - 1,
@@ -55,13 +55,10 @@ export default function Overview() {
 
   const { data: analyticsData, isLoading, error } = useGetAllAnalyticsQuery({ year: selectedYear });
 
-  if (isLoading) return <OverviewLoading />;
-  if (error) return <div className="flex items-center justify-center h-96 text-red-500">Error loading analytics</div>;
-
   const data = analyticsData?.data;
 
   return (
-    <div className="space-y-4 sm:space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-4 sm:space-y-8 ">
 
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -86,15 +83,15 @@ export default function Overview() {
       </div>
 
       {/* ── Row 1: Stat Cards ── */}
-      <CardStates data={data?.overview} />
+      <CardStates data={data?.overview} loading={isLoading} />
 
       {/* ── Row 2: Charts ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-2">
-          <SalesAnalytics data={data?.salesAnalytics} totalRevenue={data?.overview?.totalRevenue} />
+          <SalesAnalytics data={data?.salesAnalytics} loading={isLoading} totalRevenue={data?.overview?.totalRevenue} />
         </div>
         <div className="lg:col-span-1 text-black">
-          <UserDistribution data={data?.userDistribution} />
+          <UserDistribution data={data?.userDistribution} loading={isLoading} />
         </div>
       </div>
     </div>

@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   MoreVertical,
@@ -11,7 +10,20 @@ import {
   Clock,
   Package,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -19,12 +31,24 @@ import { useGetAllParcelsQuery } from "@/features/parcel/parcelApi";
 
 export default function OrderManagement() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   const { data: response, isLoading } = useGetAllParcelsQuery({ page });
 
   const parcels = response?.data?.parcels || [];
+
+  const filteredParcels = parcels.filter((parcel: any) => {
+    if (!searchQuery) return true;
+    const lowerQuery = searchQuery.toLowerCase();
+    return (
+      parcel._id?.toLowerCase().includes(lowerQuery) ||
+      parcel.sender?.fullName?.toLowerCase().includes(lowerQuery) ||
+      parcel.sender?.email?.toLowerCase().includes(lowerQuery) ||
+      parcel.dropLocation?.address?.toLowerCase().includes(lowerQuery) ||
+      parcel.status?.toLowerCase().includes(lowerQuery)
+    );
+  });
+
   const meta = response?.data?.meta || { totalPage: 1 };
 
   return (
@@ -48,133 +72,125 @@ export default function OrderManagement() {
         </div>
       </div>
 
-      {/* ── Table Card ── */}
-      <Card className="border-none shadow-none p-1 sm:p-2 rounded-lg overflow-visible bg-white">
-        <CardContent className="p-0">
-          <div className="w-full overflow-x-auto custom-scrollbar pb-2">
-            <table className="w-full text-left min-w-[800px]">
-              <thead>
-                <tr className="border-b border-gray-200/50">
-                  <th className="px-5 sm:px-10 py-4 sm:py-6 text-[10px] sm:text-[11px] font-bold text-[#9CA3AF] tracking-widest uppercase">ORDER ID</th>
-                  <th className="px-4 sm:px-6 py-4 sm:py-6 text-[10px] sm:text-[11px] font-bold text-[#9CA3AF] tracking-widest uppercase">USER NAME</th>
-                  <th className="px-4 sm:px-6 py-4 sm:py-6 text-[10px] sm:text-[11px] font-bold text-[#9CA3AF] tracking-widest uppercase">DROP ADDRESS</th>
-                  <th className="px-4 sm:px-6 py-4 sm:py-6 text-[10px] sm:text-[11px] font-bold text-[#9CA3AF] tracking-widest uppercase">STATUS</th>
-                  <th className="px-5 sm:px-10 py-4 sm:py-6 text-[10px] sm:text-[11px] font-bold text-[#9CA3AF] tracking-widest uppercase text-right">ACTION</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100/50">
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="px-5 sm:px-10 py-8"><div className="h-4 bg-gray-100 rounded w-20" /></td>
-                      <td className="px-4 sm:px-6 py-8">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gray-100" />
-                          <div className="space-y-2">
-                            <div className="h-3 bg-gray-100 rounded w-24" />
-                            <div className="h-2 bg-gray-100 rounded w-32" />
-                          </div>
+      {/* ── Table Container ── */}
+      <div className="bg-white backdrop-blur-sm border border-gray-100 rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-gray-100/80 hover:bg-transparent">
+                <TableHead className="py-5 px-6 text-[11px] font-medium text-[#9CA3AF] tracking-widest uppercase">ORDER ID</TableHead>
+                <TableHead className="py-5 px-6 text-[11px] font-medium text-[#9CA3AF] tracking-widest uppercase">USER NAME</TableHead>
+                <TableHead className="py-5 px-6 text-[11px] font-medium text-[#9CA3AF] tracking-widest uppercase">DROP ADDRESS</TableHead>
+                <TableHead className="py-5 px-6 text-[11px] font-medium text-[#9CA3AF] tracking-widest uppercase">STATUS</TableHead>
+                <TableHead className="py-5 px-6 text-[11px] font-medium text-[#9CA3AF] tracking-widest uppercase text-right">ACTION</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i} className="border-b border-gray-50/50">
+                    <TableCell className="py-6 px-6"><div className="h-4 bg-gray-100 rounded w-20 animate-pulse" /></TableCell>
+                    <TableCell className="py-6 px-6">
+                      <div className="flex items-center gap-3 animate-pulse">
+                        <div className="w-10 h-10 rounded-full bg-gray-100" />
+                        <div className="space-y-2">
+                          <div className="h-3 bg-gray-100 rounded w-24" />
+                          <div className="h-2 bg-gray-100 rounded w-32" />
                         </div>
-                      </td>
-                      <td className="px-4 sm:px-6 py-8"><div className="h-4 bg-gray-100 rounded w-48" /></td>
-                      <td className="px-4 sm:px-6 py-8"><div className="h-6 bg-gray-100 rounded-full w-24" /></td>
-                      <td className="px-5 sm:px-10 py-8 text-right"><div className="h-8 bg-gray-100 rounded w-8 ml-auto" /></td>
-                    </tr>
-                  ))
-                ) : parcels.length > 0 ? (
-                  parcels.map((parcel: any) => (
-                    <tr key={parcel._id} className="group hover:bg-gray-50/50 transition-colors">
-                      <td className="px-5 sm:px-10 py-4 sm:py-6">
-                        <span className="text-xs sm:text-sm font-semibold text-[#FF4A00]">
-                          #{parcel._id.slice(-6).toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 sm:py-6">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#1A365D] flex items-center justify-center text-white text-[10px] font-bold shadow-sm ring-2 ring-white overflow-hidden">
-                            {parcel.sender?.image ? (
-                              <img src={parcel.sender.image} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              parcel.sender?.fullName?.charAt(0) || <Package className="w-4 h-4" />
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs sm:text-sm font-bold text-[#2C2E33] truncate">
-                              {parcel.sender?.fullName || "Guest User"}
-                            </p>
-                            <p className="text-[10px] sm:text-xs font-medium text-gray-400 truncate">
-                              {parcel.sender?.email || "No Email"}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 sm:py-6">
-                        <p className="text-xs sm:text-sm font-medium text-gray-500 max-w-[200px] sm:max-w-[300px] truncate lg:max-w-[400px]">
-                          {parcel.dropLocation?.address || "N/A"}
-                        </p>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 sm:py-6">
-                        <div className={cn(
-                          "inline-flex items-center gap-1.5 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full font-bold text-[9px] sm:text-[10px] uppercase tracking-wider shadow-sm",
-                          parcel.status === "DELIVERED"
-                            ? "bg-green-50 text-green-600 border border-green-100"
-                            : parcel.status === "PENDING" || parcel.status === "CREATED"
-                              ? "bg-orange-50 text-orange-600 border border-orange-100"
-                              : "bg-blue-50 text-blue-600 border border-blue-100"
-                        )}>
-                          {parcel.status === "DELIVERED" ? (
-                            <CheckCircle2 className="w-3 h-3" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-6 px-6"><div className="h-4 bg-gray-100 rounded w-48 animate-pulse" /></TableCell>
+                    <TableCell className="py-6 px-6"><div className="h-6 bg-gray-100 rounded-full w-24 animate-pulse" /></TableCell>
+                    <TableCell className="py-6 px-6 text-right"><div className="h-8 bg-gray-100 rounded w-8 ml-auto animate-pulse" /></TableCell>
+                  </TableRow>
+                ))
+              ) : filteredParcels.length > 0 ? (
+                filteredParcels.map((parcel: any) => (
+                  <TableRow key={parcel._id} className="group border-b border-gray-50/50 hover:bg-white/60 transition-colors">
+                    <TableCell className="py-6 px-6">
+                      <span className="text-xs sm:text-sm font-medium text-[#FF4A00]">
+                        #{parcel._id.slice(-6).toUpperCase()}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-6 px-6">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#1A365D] flex items-center justify-center text-white text-[10px] font-medium shadow-sm ring-2 ring-white overflow-hidden shrink-0">
+                          {parcel.sender?.image ? (
+                            <img src={parcel.sender.image} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <Clock className="w-3 h-3" />
+                            parcel.sender?.fullName?.charAt(0) || <Package className="w-4 h-4" />
                           )}
-                          {parcel.status}
                         </div>
-                      </td>
-                      <td className="px-5 sm:px-10 py-4 sm:py-6 text-right relative">
-                        <button
-                          onClick={() => setMenuOpenId(menuOpenId === parcel._id ? null : parcel._id)}
-                          className="p-1.5 sm:p-2 hover:bg-white rounded-lg cursor-pointer transition-colors text-gray-400 group-hover:text-gray-600"
-                        >
-                          <MoreVertical className="w-5 h-5" />
-                        </button>
-
-                        {/* Dropdown Menu */}
-                        <AnimatePresence>
-                          {menuOpenId === parcel._id && (
-                            <>
-                              <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                className="absolute right-14 top-8 z-20 w-44 bg-white rounded-lg shadow-xl border border-gray-100 p-1 overflow-hidden text-left"
-                              >
-                                <Link
-                                  href={`/order-management/${parcel._id}`}
-                                  className="w-full flex items-center gap-3 p-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition-colors group/item"
-                                >
-                                  <Eye className="w-4 h-4 text-gray-400 group-hover/item:text-[#FF4A00]" />
-                                  View Details
-                                </Link>
-                              </motion.div>
-                            </>
-                          )}
-                        </AnimatePresence>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="py-20 text-center text-gray-400 font-medium text-lg">
-                      No orders found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                        <div className="min-w-0 space-y-1">
+                          <p className="text-sm font-medium text-[#2C2E33] truncate">
+                            {parcel.sender?.fullName || "Guest User"}
+                          </p>
+                          <p className="text-xs font-medium text-gray-400 truncate">
+                            {parcel.sender?.email || "No Email"}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-6 px-6">
+                      <p className="text-sm font-medium text-gray-500 max-w-[200px] sm:max-w-[300px] truncate lg:max-w-[400px]">
+                        {parcel.dropLocation?.address || "N/A"}
+                      </p>
+                    </TableCell>
+                    <TableCell className="py-6 px-6">
+                      <div className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full font-semibold text-[10px]  tracking-wider shadow-sm",
+                        parcel.status === "DELIVERED"
+                          ? "bg-green-50 text-green-600 border border-green-100"
+                          : parcel.status === "PENDING" || parcel.status === "CREATED"
+                            ? "bg-orange-50 text-orange-600 border border-orange-100"
+                            : "bg-blue-50 text-blue-600 border border-blue-100"
+                      )}>
+                        {parcel.status === "DELIVERED" ? (
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        ) : (
+                          <Clock className="w-3.5 h-3.5" />
+                        )}
+                        {parcel.status}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-6 px-6 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 hover:bg-gray-100 cursor-pointer rounded-xl transition-colors text-gray-400 focus:outline-none">
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 p-1 bg-white border-gray-100 shadow-xl rounded-xl">
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={`/order-management/${parcel._id}`}
+                              className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg cursor-pointer"
+                            >
+                              <Eye className="w-4 h-4 text-gray-400" />
+                              View Details
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-64 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
+                        <Package className="w-8 h-8 text-gray-300" />
+                      </div>
+                      <p className="text-gray-400 font-medium">No orders found</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
 
       {/* ── Pagination ── */}
       {meta.totalPage > 1 && (

@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   MoreHorizontal,
@@ -13,23 +12,46 @@ import {
   Clock
 } from "lucide-react";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useGetAllContactQuery } from "@/features/contact/contactApi";
 
 export default function ContactUs() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   const { data: contactData, isLoading } = useGetAllContactQuery({
     page,
     limit: 10,
-    searchTerm: searchQuery,
+    searchTerm: "", // Disabled backend search for local filtering
   });
 
   const contacts = contactData?.data || [];
+
+  const filteredContacts = contacts.filter((msg: any) => {
+    if (!searchQuery) return true;
+    const lowerQuery = searchQuery.toLowerCase();
+    return (
+      msg.name?.toLowerCase().includes(lowerQuery) ||
+      msg.message?.toLowerCase().includes(lowerQuery) ||
+      msg.email?.toLowerCase().includes(lowerQuery) ||
+      msg.phone?.toLowerCase().includes(lowerQuery)
+    );
+  });
   const meta = contactData?.meta || { totalPage: 1 };
 
   return (
@@ -56,122 +78,108 @@ export default function ContactUs() {
         </div>
       </div>
 
-      {/* ── Table Card ── */}
-      <Card className="border-none shadow-none bg-white p-1 sm:p-2 rounded-lg overflow-visible">
-        <CardContent className="p-4 sm:p-10 pb-4">
-          <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
-            <div className="min-w-[800px]">
-              {/* Table Header */}
-              <div className="grid grid-cols-12 pb-6 border-b border-gray-200/50 text-[11px] font-bold text-[#9CA3AF] tracking-widest uppercase">
-                <div className="col-span-3">USER</div>
-                <div className="col-span-3">MESSAGE</div>
-                <div className="col-span-3">CONTACT</div>
-                <div className="col-span-2">STATUS</div>
-                <div className="col-span-1 text-right">ACTIONS</div>
-              </div>
+      {/* ── Table Container ── */}
+      <div className="bg-white/40 backdrop-blur-sm border border-gray-100 rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-gray-100/80 hover:bg-transparent">
+                <TableHead className="py-5 px-6 text-[11px] font-medium text-[#9CA3AF] tracking-widest uppercase">USER</TableHead>
+                <TableHead className="py-5 px-6 text-[11px] font-medium text-[#9CA3AF] tracking-widest uppercase">MESSAGE</TableHead>
+                <TableHead className="py-5 px-6 text-[11px] font-medium text-[#9CA3AF] tracking-widest uppercase">CONTACT</TableHead>
+                <TableHead className="py-5 px-6 text-[11px] font-medium text-[#9CA3AF] tracking-widest uppercase">STATUS</TableHead>
+                <TableHead className="py-5 px-6 text-[11px] font-medium text-[#9CA3AF] tracking-widest uppercase text-right">ACTIONS</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i} className="border-b border-gray-50/50">
+                    <TableCell className="py-6 px-6"><div className="h-4 bg-gray-100 rounded w-24 animate-pulse" /></TableCell>
+                    <TableCell className="py-6 px-6"><div className="h-4 bg-gray-100 rounded w-48 animate-pulse" /></TableCell>
+                    <TableCell className="py-6 px-6"><div className="h-4 bg-gray-100 rounded w-32 animate-pulse" /></TableCell>
+                    <TableCell className="py-6 px-6"><div className="h-6 bg-gray-100 rounded-full w-24 animate-pulse" /></TableCell>
+                    <TableCell className="py-6 px-6 text-right"><div className="h-8 bg-gray-100 rounded w-8 ml-auto animate-pulse" /></TableCell>
+                  </TableRow>
+                ))
+              ) : filteredContacts.length > 0 ? (
+                filteredContacts.map((msg: any) => (
+                  <TableRow key={msg._id} className="group border-b border-gray-50/50 hover:bg-white/60 transition-colors">
+                    <TableCell className="py-6 px-6">
+                      <p className="text-sm font-medium text-[#2C2E33]">{msg.name}</p>
+                    </TableCell>
 
-              {/* Table Body */}
-              <div className="divide-y divide-gray-100/50">
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="grid grid-cols-12 py-10 items-center animate-pulse">
-                      <div className="col-span-3 h-4 bg-gray-100 rounded w-24" />
-                      <div className="col-span-3 h-4 bg-gray-100 rounded w-48" />
-                      <div className="col-span-3 h-4 bg-gray-100 rounded w-32" />
-                      <div className="col-span-2 h-4 bg-gray-100 rounded w-16" />
-                      <div className="col-span-1 h-4 bg-gray-100 rounded w-8 ml-auto" />
-                    </div>
-                  ))
-                ) : contacts.length > 0 ? (
-                  contacts.map((msg: any) => (
-                    <div key={msg._id} className="grid grid-cols-12 py-10 items-center group relative">
-                      <div className="col-span-3">
-                        <p className="text-sm sm:text-base font-bold text-[#2C2E33] leading-none mb-1 sm:mb-0">{msg.name}</p>
-                      </div>
+                    <TableCell className="py-6 px-6">
+                      <p className="text-sm font-medium text-gray-700 max-w-[250px] truncate">{msg.message}</p>
+                    </TableCell>
 
-                      <div className="col-span-3">
-                        <p className="text-sm font-bold text-[#2C2E33] opacity-80 truncate pr-4">{msg.message}</p>
-                      </div>
-
-                      <div className="col-span-3 space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-bold text-[#2C2E33]">
-                          <div className="w-5 h-5 flex items-center justify-center">
-                            <Phone className="w-4 h-4 text-gray-400" />
-                          </div>
+                    <TableCell className="py-6 px-6">
+                      <div className="space-y-1.5 whitespace-nowrap">
+                        <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                          <Phone className="w-3.5 h-3.5 text-gray-400" />
                           {msg.phone}
                         </div>
-                        <div className="flex items-center gap-2 text-xs font-medium text-gray-400 pl-0.5">
-                          <div className="w-5 h-5 flex items-center justify-center">
-                            <Mail className="w-4 h-4 text-gray-400" />
-                          </div>
+                        <div className="flex items-center gap-2 text-xs font-medium text-gray-400">
+                          <Mail className="w-3.5 h-3.5 text-gray-400" />
                           {msg.email}
                         </div>
                       </div>
+                    </TableCell>
 
-                      <div className="col-span-2">
-                        <div className={cn(
-                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold",
-                          msg.isReplied
-                            ? "bg-green-50 text-green-600"
-                            : "bg-orange-50 text-orange-600"
-                        )}>
-                          {msg.isReplied ? (
-                            <>
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              Replied
-                            </>
-                          ) : (
-                            <>
-                              <Clock className="w-3.5 h-3.5" />
-                              Pending
-                            </>
-                          )}
-                        </div>
+                    <TableCell className="py-6 px-6 whitespace-nowrap">
+                      <div className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider",
+                        msg.isReplied ? "bg-green-50 text-green-600 border border-green-100" : "bg-orange-50 text-orange-600 border border-orange-100"
+                      )}>
+                        {msg.isReplied ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            Replied
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="w-3.5 h-3.5" />
+                            Pending
+                          </>
+                        )}
                       </div>
+                    </TableCell>
 
-                      <div className="col-span-1 text-right relative">
-                        <button
-                          onClick={() => setMenuOpenId(menuOpenId === msg._id ? null : msg._id)}
-                          className="p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors text-gray-400"
-                        >
-                          <MoreHorizontal className="w-6 h-6" />
-                        </button>
-
-                        {/* Dropdown Menu */}
-                        <AnimatePresence>
-                          {menuOpenId === msg._id && (
-                            <>
-                              <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                className="absolute right-0 top-8 z-20 w-52 bg-white rounded-lg shadow-xl border border-gray-100 p-1 overflow-hidden text-left"
-                              >
-                                <Link
-                                  href={`/contact-us/${msg._id}`}
-                                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-sm transition-colors group/item"
-                                >
-                                  <Eye className="w-4 h-4 text-gray-400 group-hover/item:text-[#FF4A00]" />
-                                  View Request
-                                </Link>
-                              </motion.div>
-                            </>
-                          )}
-                        </AnimatePresence>
-                      </div>
+                    <TableCell className="py-6 px-6 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 hover:bg-gray-100 cursor-pointer rounded-xl transition-colors text-gray-400 focus:outline-none">
+                            <MoreHorizontal className="w-5 h-5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 p-1 bg-white border-gray-100 shadow-xl rounded-xl">
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={`/contact-us/${msg._id}`}
+                              className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg cursor-pointer"
+                            >
+                              <Eye className="w-4 h-4 text-gray-400" />
+                              View Request
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-64 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <p className="text-gray-400 font-medium">No messages found</p>
                     </div>
-                  ))
-                ) : (
-                  <div className="py-20 text-center text-gray-400 font-medium">
-                    No messages found
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
 
       {/* ── Pagination ── */}
       {meta.totalPage > 1 && (
@@ -193,7 +201,7 @@ export default function ContactUs() {
                     key={p}
                     onClick={() => setPage(p)}
                     className={cn(
-                      "w-10 h-10 rounded-full shadow-lg cursor-pointer text-sm font-bold transition-all",
+                      "w-10 h-10 rounded-full shadow-lg cursor-pointer text-sm font-medium transition-all",
                       page === p ? "bg-[#FF4A00] text-white shadow-lg shadow-orange-100" : "bg-white/50 text-gray-600 hover:bg-white border border-gray-100"
                     )}
                   >

@@ -22,6 +22,21 @@ import {
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -30,20 +45,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  useGetAllUserQuery, 
-  useNewDriverRequestsQuery, 
-  useApproveMutation, 
-  useDeleteUserMutation 
+import {
+  useGetAllUserQuery,
+  useNewDriverRequestsQuery,
+  useApproveMutation,
+  useDeleteUserMutation,
 } from "@/features/user/userApi";
-import { toast } from "sonner";
-
-
-const stats = [
-  { title: "TOTAL VEHICLES", value: "142", icon: Bike, color: "#FF4A00" },
-  { title: "ACTIVE DRIVERS", value: "128", icon: Users, color: "#FF4A00" },
-  { title: "AVAILABLE REQUESTS", value: "13", icon: ClipboardList, color: "#FF4A00" },
-];
+import {
+  useCreateVehicleMutation,
+  useGetAllVehicleQuery,
+  useAssignVehicleToDriverMutation,
+  useRemoveDriverMutation,
+} from "@/features/vehicle/vehicleApi";
 
 export default function ManageDriver() {
   const router = useRouter();
@@ -52,9 +65,10 @@ export default function ManageDriver() {
   const [page, setPage] = useState(1);
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
-  
+
   const [vehicleForm, setVehicleForm] = useState({
     name: "",
     plate: "",
@@ -63,33 +77,45 @@ export default function ManageDriver() {
     imagePreview: "",
   });
 
-  const { data: activeResponse, isLoading: isActiveLoading } = useGetAllUserQuery({ 
-    page, 
-    role: "driver",
-    searchTerm: searchQuery 
+  const [vehicleFormErrors, setVehicleFormErrors] = useState({
+    name: "",
+    plate: "",
+    category: "",
+    imageFile: "",
   });
-  const { data: requestsResponse, isLoading: isRequestsLoading } = useNewDriverRequestsQuery({ 
+
+  const { data: activeResponse, isLoading: isActiveLoading } = useGetAllUserQuery({
     page,
-    searchTerm: searchQuery 
+    role: "driver",
+    searchTerm: searchQuery
   });
-  const [approve] = useApproveMutation();
-  const [deleteUser] = useDeleteUserMutation();
+  const { data: requestsResponse, isLoading: isRequestsLoading } = useNewDriverRequestsQuery({
+    page,
+    searchTerm: searchQuery
+  });
+  const { data: vehicleData, isLoading: isVehicleLoading } = useGetAllVehicleQuery({ page: 1 });
+  const vehicles = vehicleData?.data?.vehicles || [];
+
+  const [approve, { isLoading: approveLoading }] = useApproveMutation();
+  const [deleteUser, { isLoading: deletingUserLoading }] = useDeleteUserMutation();
+  const [createVehicle, { isLoading: isCreatingVehicle }] = useCreateVehicleMutation();
+  const [assignVehicle, { isLoading: isAssigning }] = useAssignVehicleToDriverMutation();
+  const [unassignVehicle] = useRemoveDriverMutation();
 
   const activeDrivers = activeResponse?.data?.users || [];
   const requests = requestsResponse?.data?.users || [];
   const meta = activeTab === "active" ? activeResponse?.data?.meta : requestsResponse?.data?.meta;
 
   const stats = [
-    { title: "TOTAL VEHICLES", value: "142", icon: Bike, color: "#FF4A00" }, // Vehicle API not yet implemented
+    { title: "TOTAL VEHICLES", value: vehicleData?.data?.meta?.total?.toString() || "0", icon: Bike, color: "#FF4A00" },
     { title: "ACTIVE DRIVERS", value: activeResponse?.data?.meta?.total?.toString() || "0", icon: Users, color: "#FF4A00" },
     { title: "AVAILABLE REQUESTS", value: requestsResponse?.data?.meta?.total?.toString() || "0", icon: ClipboardList, color: "#FF4A00" },
   ];
 
   const handleApprove = async (id: string) => {
     try {
-      await approve({ id }).unwrap();
-      toast.success("Driver approved successfully");
-      setMenuOpenId(null);
+      const response = await approve({ id }).unwrap();
+      toast.success(response?.message || "Driver approved successfully");
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to approve driver");
     }
@@ -98,10 +124,9 @@ export default function ManageDriver() {
   const handleRemove = async () => {
     if (!selectedDriverId) return;
     try {
-      await deleteUser({ id: selectedDriverId }).unwrap();
-      toast.success("Driver removed successfully");
+      const response = await deleteUser({ id: selectedDriverId }).unwrap();
+      toast.success(response?.message || "Driver removed successfully");
       setIsRemoveModalOpen(false);
-      setMenuOpenId(null);
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to remove driver");
     }
@@ -115,15 +140,69 @@ export default function ManageDriver() {
       imageFile: file,
       imagePreview: URL.createObjectURL(file),
     }));
+    if (vehicleFormErrors.imageFile) {
+      setVehicleFormErrors((p) => ({ ...p, imageFile: "" }));
+    }
   };
 
-  const handleAddVehicle = () => {
+  const resetVehicleForm = () => {
     setIsAddVehicleOpen(false);
     setVehicleForm({ name: "", plate: "", category: "", imageFile: null, imagePreview: "" });
+    setVehicleFormErrors({ name: "", plate: "", category: "", imageFile: "" });
+  };
+
+  const handleAddVehicle = async () => {
+    let hasError = false;
+    const errors = { name: "", plate: "", category: "", imageFile: "" };
+
+    if (!vehicleForm.imageFile) { errors.imageFile = "Vehicle image is required"; hasError = true; }
+    if (!vehicleForm.name) { errors.name = "Vehicle name is required"; hasError = true; }
+    if (!vehicleForm.plate) { errors.plate = "Plate number is required"; hasError = true; }
+    if (!vehicleForm.category) { errors.category = "Category is required"; hasError = true; }
+
+    setVehicleFormErrors(errors);
+
+    if (hasError) return;
+
+    const formData = new FormData();
+    formData.append("name", vehicleForm.name);
+    formData.append("licensePlate", vehicleForm.plate);
+    formData.append("type", vehicleForm.category);
+    formData.append("image", vehicleForm.imageFile!);
+
+    try {
+      const response = await createVehicle(formData).unwrap();
+      toast.success(response?.message || "Vehicle added successfully");
+      resetVehicleForm();
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to add vehicle");
+    }
+  };
+
+  const handleAssignVehicle = async () => {
+    if (!selectedDriverId || !selectedVehicleId) return;
+    try {
+      const response = await assignVehicle({ driverId: selectedDriverId, vehicleId: selectedVehicleId }).unwrap();
+      toast.success(response?.message || "Vehicle assigned successfully");
+      setIsAssignModalOpen(false);
+      setSelectedVehicleId("");
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to assign vehicle");
+    }
   };
 
   const isLoading = activeTab === "active" ? isActiveLoading : isRequestsLoading;
   const currentData = activeTab === "active" ? activeDrivers : requests;
+
+  const filteredData = currentData.filter((item: any) => {
+    if (!searchQuery) return true;
+    const lowerQuery = searchQuery.toLowerCase();
+    return (
+      item.fullName?.toLowerCase().includes(lowerQuery) ||
+      item.email?.toLowerCase().includes(lowerQuery) ||
+      item.driverInfo?.assignedVehiclePlate?.toLowerCase().includes(lowerQuery)
+    );
+  });
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-700 pb-10">
@@ -198,155 +277,172 @@ export default function ManageDriver() {
         </div>
       </div>
 
-      {/* ── Driver List Card ── */}
-      <Card className="border-none shadow-none bg-white rounded-lg overflow-visible p-1 sm:p-2">
-        <CardContent className="p-4 sm:p-10">
-          <h2 className="text-lg sm:text-xl font-bold text-[#2C2E33] mb-6 sm:mb-8">
-            {activeTab === "active" ? "Active Driver List" : "New Driver Requests"}
-          </h2>
+      {/* ── Driver List ── */}
+      <div className="bg-white/40 backdrop-blur-sm rounded-2xl border border-gray-100 overflow-hidden shadow-sm p-4 sm:p-6 lg:p-8">
+        <h2 className="text-lg sm:text-xl font-bold text-[#2C2E33] mb-6 sm:mb-8">
+          {activeTab === "active" ? "Active Driver List" : "New Driver Requests"}
+        </h2>
 
-          <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
-            <div className="min-w-[700px]">
-              {/* Table Header */}
-              <div className="grid grid-cols-12 pb-4 border-b border-gray-100/50 text-[11px] font-bold text-[#9CA3AF] tracking-widest uppercase">
-                <div className="col-span-5">{activeTab === "active" ? "DRIVER IDENTITY" : "DRIVER NAME"}</div>
-                <div className="col-span-5">{activeTab === "active" ? "ASSIGNED VEHICLE" : "DATE APPLIED"}</div>
-                <div className="col-span-2 text-right">ACTIONS</div>
-              </div>
+        <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
+          <div className="min-w-[700px]">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-gray-100/50 hover:bg-transparent">
+                  <TableHead className="text-[11px] font-bold text-[#9CA3AF] tracking-widest uppercase h-14 pl-6">
+                    {activeTab === "active" ? "DRIVER IDENTITY" : "DRIVER NAME"}
+                  </TableHead>
+                  <TableHead className="text-[11px] font-bold text-[#9CA3AF] tracking-widest uppercase h-14">
+                    {activeTab === "active" ? "ASSIGNED VEHICLE" : "DATE APPLIED"}
+                  </TableHead>
+                  <TableHead className="text-[11px] font-bold text-[#9CA3AF] tracking-widest uppercase h-14 text-right pr-6">
+                    ACTIONS
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
 
-              {/* Table Body */}
-              <div className="divide-y divide-gray-100/50">
+              <TableBody>
                 {isLoading ? (
-                  <div className="py-20 flex justify-center col-span-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF4A00]" />
-                  </div>
-                ) : currentData.length === 0 ? (
-                  <div className="py-20 text-center text-gray-400 col-span-12">
-                    No drivers found.
-                  </div>
-                ) : currentData.map((item: any) => (
-                  <div key={item._id} className="grid grid-cols-12 py-6 items-center group relative">
-                    <div className="col-span-5 flex items-center gap-3 sm:gap-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-gray-200 border-2 border-white shadow-sm shrink-0 relative">
-                        {item.image ? (
-                          <Image src={item.image} alt={item.fullName} fill className="object-cover" unoptimized />
-                        ) : (
-                          <div className="w-full h-full bg-[#1A365D] flex items-center justify-center text-white text-[10px] sm:text-xs font-medium">
-                            {item.fullName.charAt(0)}
+                  <TableRow>
+                    <TableCell colSpan={3} className="h-32 text-center">
+                      <div className="flex items-center justify-center">
+                        <LoadingSpin />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="h-32 text-center text-gray-500 font-medium border-b-0">
+                      {searchQuery ? `No drivers found matching "${searchQuery}".` : "No drivers found."}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredData.map((item: any) => (
+                    <TableRow key={item._id} className="group border-b border-gray-50 hover:bg-white/60 transition-colors">
+                      <TableCell className="pl-6 py-5">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-gray-200 border-2 border-white shadow-sm shrink-0 relative">
+                            {item.image ? (
+                              <Image src={item.image} alt={item.fullName} fill className="object-cover" unoptimized />
+                            ) : (
+                              <div className="w-full h-full bg-[#1A365D] flex items-center justify-center text-white text-[10px] sm:text-xs font-medium">
+                                {item.fullName.charAt(0)}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="space-y-0.5 whitespace-nowrap">
-                        <p className="text-sm font-medium text-gray-900">{item.fullName}</p>
-                        <p className="text-[10px] sm:text-xs font-medium text-gray-400">{item.email}</p>
-                      </div>
-                    </div>
+                          <div className="space-y-0.5 whitespace-nowrap">
+                            <p className="text-sm font-medium text-[#2C2E33]">{item.fullName}</p>
+                            <p className="text-[11px] sm:text-xs font-medium text-gray-400">{item.email}</p>
+                          </div>
+                        </div>
+                      </TableCell>
 
-                    <div className="col-span-5 flex flex-col gap-1 pr-4">
-                      {activeTab === "active" ? (
-                        <>
-                          <p className={cn("font-medium text-sm whitespace-nowrap", item.driverInfo?.assignedVehicle ? "text-gray-900" : "text-gray-400 italic")}>
-                            {item.driverInfo?.assignedVehicle || "No vehicle assigned"}
-                          </p>
-                          {item.driverInfo?.assignedVehiclePlate && (
-                            <span className="px-2 py-0.5 bg-[#D1D5DB] text-[#4B5563] text-[10px] font-bold rounded w-fit uppercase tracking-wider">
-                              {item.driverInfo.assignedVehiclePlate}
-                            </span>
+                      <TableCell className="py-5">
+                        <div className="flex flex-col gap-1 pr-4">
+                          {activeTab === "active" ? (
+                            (() => {
+                              const assignedV = vehicles.find((v: any) => v._id === item.driverInfo?.assignedVehicle);
+                              const vName = assignedV
+                                ? assignedV.name
+                                : (item.driverInfo?.assignedVehicle
+                                  ? (isVehicleLoading ? "Loading..." : "Unknown Vehicle")
+                                  : "No vehicle assigned");
+                              const vPlate = assignedV ? assignedV.licensePlate : item.driverInfo?.assignedVehiclePlate;
+
+                              return (
+                                <>
+                                  <p className={cn("font-medium text-sm whitespace-nowrap", item.driverInfo?.assignedVehicle ? "text-[#2C2E33]" : "text-gray-400 italic")}>
+                                    {vName}
+                                  </p>
+                                  {vPlate && (
+                                    <span className="px-2 py-0.5 bg-[#D1D5DB] text-[#4B5563] text-[10px] font-bold rounded w-fit uppercase tracking-wider">
+                                      {vPlate}
+                                    </span>
+                                  )}
+                                </>
+                              );
+                            })()
+                          ) : (
+                            <p className="font-medium text-[#2C2E33] text-sm whitespace-nowrap">
+                              {new Date(item.createdAt).toLocaleDateString()}
+                            </p>
                           )}
-                        </>
-                      ) : (
-                        <p className="font-medium text-gray-900 text-sm whitespace-nowrap">
-                          {new Date(item.createdAt).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
+                        </div>
+                      </TableCell>
 
-                    <div className="col-span-2 text-right relative">
-                      <button
-                        onClick={() => setMenuOpenId(menuOpenId === item._id ? null : item._id)}
-                        className="p-2 hover:bg-white rounded-lg cursor-pointer transition-colors text-gray-400"
-                      >
-                        <MoreHorizontal className="w-6 h-6" />
-                      </button>
-
-                      {/* Popover Menu */}
-                      <AnimatePresence>
-                        {menuOpenId === item._id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={() => setMenuOpenId(null)}
-                            />
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                              className="absolute right-0 top-full w-56 bg-white rounded-lg shadow-2xl border border-gray-100 z-20 p-2 text-left"
+                      <TableCell className="pr-6 py-5 text-right relative">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors text-gray-400 outline-none focus:ring-2 focus:ring-orange-200">
+                            <MoreHorizontal className="w-5 h-5 sm:w-6 sm:h-6" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl shadow-xl border-gray-100">
+                            <DropdownMenuItem
+                              onClick={() => router.push(`/users-management/${item._id}`)}
+                              className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[#737780] hover:text-[#2C2E33] cursor-pointer rounded-lg focus:bg-gray-50 focus:text-[#2C2E33]"
                             >
-                              <button
-                                onClick={() => { setMenuOpenId(null); router.push(`/users-management/${item._id}`); }}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors group"
-                              >
-                                <Eye className="w-4 h-4 text-gray-400 group-hover:text-[#FF4A00]" />
-                                View Profile
-                              </button>
+                              <Eye className="w-4 h-4" />
+                              View Profile
+                            </DropdownMenuItem>
 
-                              {activeTab === "active" ? (
-                                <>
-                                  <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#10B981] hover:bg-green-50 rounded-lg cursor-pointer transition-colors group">
-                                    <UserPlus className="w-4 h-4" />
-                                    Assign Vehicle
-                                  </button>
-                                  <button
-                                    onClick={() => { setSelectedDriverId(item._id); setIsRemoveModalOpen(true); setMenuOpenId(null); }}
-                                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#FF0000] hover:bg-red-50 rounded-lg cursor-pointer transition-colors group border-t border-gray-50 mt-1"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                    Remove Driver
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button 
-                                    onClick={() => handleApprove(item._id)}
-                                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#10B981] hover:bg-green-50 rounded-lg cursor-pointer transition-colors group"
-                                  >
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    Approve Driver
-                                  </button>
-                                  <button 
-                                    onClick={() => { setSelectedDriverId(item._id); setIsRemoveModalOpen(true); setMenuOpenId(null); }}
-                                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#FF4A00] hover:bg-orange-50 rounded-lg cursor-pointer transition-colors group border-t border-gray-50 mt-1"
-                                  >
-                                    <X className="w-4 h-4" />
-                                    Reject Driver
-                                  </button>
-                                </>
-                              )}
-                            </motion.div>
-                          </>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                            {activeTab === "active" ? (
+                              <>
+                                <DropdownMenuItem
+                                  onClick={() => { setSelectedDriverId(item._id); setIsAssignModalOpen(true); }}
+                                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[#10B981] cursor-pointer rounded-lg focus:bg-green-50 focus:text-[#10B981]"
+                                >
+                                  <UserPlus className="w-4 h-4" />
+                                  Assign Vehicle
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="my-1 bg-gray-100" />
+                                <DropdownMenuItem
+                                  onClick={() => { setSelectedDriverId(item._id); setIsRemoveModalOpen(true); }}
+                                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[#FF0000] cursor-pointer rounded-lg focus:bg-red-50 focus:text-[#FF0000]"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Remove Driver
+                                </DropdownMenuItem>
+                              </>
+                            ) : (
+                              <>
+                                <DropdownMenuItem
+                                  onClick={() => handleApprove(item._id)}
+                                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[#10B981] cursor-pointer rounded-lg focus:bg-green-50 focus:text-[#10B981]"
+                                >
+                                  <CheckCircle2 className="w-4 h-4" />
+                                  Approve Driver
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="my-1 bg-gray-100" />
+                                <DropdownMenuItem
+                                  onClick={() => { setSelectedDriverId(item._id); setIsRemoveModalOpen(true); }}
+                                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[#FF4A00] cursor-pointer rounded-lg focus:bg-orange-50 focus:text-[#FF4A00]"
+                                >
+                                  <X className="w-4 h-4" />
+                                  Reject Driver
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Pagination */}
       {meta?.totalPage > 1 && (
         <div className="flex items-center justify-center gap-1 sm:gap-2 mt-8 sm:mt-12 pb-2">
-          <button 
+          <button
             disabled={page === 1}
             onClick={() => setPage(p => Math.max(1, p - 1))}
             className="p-1 sm:p-2 text-gray-400 hover:text-gray-900 transition-colors disabled:opacity-30"
           >
             <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
-          
+
           <div className="flex items-center gap-2">
             {Array.from({ length: meta.totalPage }).map((_, i) => {
               const p = i + 1;
@@ -365,7 +461,7 @@ export default function ManageDriver() {
             })}
           </div>
 
-          <button 
+          <button
             disabled={page === meta.totalPage}
             onClick={() => setPage(p => Math.min(meta.totalPage, p + 1))}
             className="p-1 sm:p-2 text-gray-400 hover:text-gray-900 transition-colors disabled:opacity-30"
@@ -407,21 +503,22 @@ export default function ManageDriver() {
                   <h3 className="text-xl sm:text-2xl font-bold text-[#2C2E33]">
                     {activeTab === "active" ? "Remove Driver?" : "Reject Driver Request?"}
                   </h3>
-                  <div className="space-y-1 sm:space-y-2 text-left w-full">
+                  {/* <div className="space-y-1 sm:space-y-2 text-left w-full">
                     <label className="text-xs sm:text-sm font-normal text-gray-500">Reason</label>
                     <textarea
                       placeholder="Enter the reason why..."
                       className="w-full h-20 sm:h-24 p-3 sm:p-4 bg-white border border-gray-200 mt-1 rounded-lg text-sm focus:ring-1 focus:ring-orange-200 outline-none resize-none"
                     />
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="flex gap-3 sm:gap-4 w-full">
                   <button
                     onClick={handleRemove}
+
                     className="flex-1 h-10 sm:h-12 bg-[#FF4F00] text-white rounded-md cursor-pointer font-medium text-base hover:opacity-90 transition-opacity"
                   >
-                    Confirm
+                    {deletingUserLoading ? "Loading..." : "Confirm"}
                   </button>
                   <button
                     onClick={() => setIsRemoveModalOpen(false)}
@@ -444,7 +541,7 @@ export default function ManageDriver() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsAddVehicleOpen(false)}
+              onClick={resetVehicleForm}
               className="absolute inset-0 bg-black/30 backdrop-blur-sm"
             />
             <motion.div
@@ -457,22 +554,25 @@ export default function ManageDriver() {
                 <h2 className="text-xl sm:text-2xl font-semibold text-center text-[#2C2E33]">Add New Vehicle</h2>
 
                 <div className="flex flex-col sm:flex-row gap-6">
-                  <div
-                    className="flex flex-col items-center justify-center gap-5 w-full sm:w-[42%] border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-white/40 cursor-pointer hover:bg-white/60 transition-colors"
-                    onClick={() => document.getElementById("vehicle-image-input")?.click()}
-                  >
-                    <input id="vehicle-image-input" type="file" accept="image/*" className="hidden" onChange={handleVehicleImageChange} />
-                    {vehicleForm.imagePreview ? (
-                      <Image src={vehicleForm.imagePreview} alt="Preview" width={128} height={128} className="w-32 h-32 object-cover rounded-xl" unoptimized />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
-                        <Camera className="w-7 h-7 text-[#FF4A00]" />
+                  <div className="flex flex-col w-full sm:w-[42%]">
+                    <div
+                      className={cn("flex flex-col items-center justify-center gap-5 w-full border-2 border-dashed rounded-2xl p-8 bg-white/40 cursor-pointer hover:bg-white/60 transition-colors", vehicleFormErrors.imageFile ? "border-red-500" : "border-gray-300")}
+                      onClick={() => document.getElementById("vehicle-image-input")?.click()}
+                    >
+                      <input id="vehicle-image-input" type="file" accept="image/*" className="hidden" onChange={handleVehicleImageChange} />
+                      {vehicleForm.imagePreview ? (
+                        <Image src={vehicleForm.imagePreview} alt="Preview" width={128} height={128} className="w-32 h-32 object-cover rounded-xl" unoptimized />
+                      ) : (
+                        <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
+                          <Camera className="w-7 h-7 text-[#FF4A00]" />
+                        </div>
+                      )}
+                      <div className="text-center space-y-1">
+                        <p className="text-base font-semibold">Vehicle Image</p>
+                        <p className="text-xs text-gray-500">Upload a clear photo of the vehicle.</p>
                       </div>
-                    )}
-                    <div className="text-center space-y-1">
-                      <p className="text-base font-semibold">Vehicle Image</p>
-                      <p className="text-xs text-gray-500">Upload a clear photo of the vehicle.</p>
                     </div>
+                    {vehicleFormErrors.imageFile && <p className="text-xs text-red-500 mt-2 ml-1">{vehicleFormErrors.imageFile}</p>}
                   </div>
 
                   <div className="flex-1 space-y-5">
@@ -482,9 +582,13 @@ export default function ManageDriver() {
                         type="text"
                         placeholder="e.g. Toyota Hiace"
                         value={vehicleForm.name}
-                        onChange={(e) => setVehicleForm((p) => ({ ...p, name: e.target.value }))}
-                        className="w-full h-12 px-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#FF4A00]/20"
+                        onChange={(e) => {
+                          setVehicleForm((p) => ({ ...p, name: e.target.value }));
+                          if (vehicleFormErrors.name) setVehicleFormErrors((p) => ({ ...p, name: "" }));
+                        }}
+                        className={cn("w-full h-12 px-4 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-[#FF4A00]/20", vehicleFormErrors.name ? "border-red-500" : "border-gray-200")}
                       />
+                      {vehicleFormErrors.name && <p className="text-xs text-red-500">{vehicleFormErrors.name}</p>}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -493,30 +597,105 @@ export default function ManageDriver() {
                           type="text"
                           placeholder="ABC-1234"
                           value={vehicleForm.plate}
-                          onChange={(e) => setVehicleForm((p) => ({ ...p, plate: e.target.value }))}
-                          className="w-full h-12 px-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#FF4A00]/20"
+                          onChange={(e) => {
+                            setVehicleForm((p) => ({ ...p, plate: e.target.value }));
+                            if (vehicleFormErrors.plate) setVehicleFormErrors((p) => ({ ...p, plate: "" }));
+                          }}
+                          className={cn("w-full h-12 px-4 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-[#FF4A00]/20", vehicleFormErrors.plate ? "border-red-500" : "border-gray-200")}
                         />
+                        {vehicleFormErrors.plate && <p className="text-xs text-red-500">{vehicleFormErrors.plate}</p>}
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-500">Category</label>
-                        <Select onValueChange={(val) => setVehicleForm((p) => ({ ...p, category: val }))}>
-                          <SelectTrigger className="w-full h-12 bg-white border border-gray-200 rounded-xl outline-none">
+                        <Select value={vehicleForm.category} onValueChange={(val) => {
+                          setVehicleForm((p) => ({ ...p, category: val }));
+                          if (vehicleFormErrors.category) setVehicleFormErrors((p) => ({ ...p, category: "" }));
+                        }}>
+                          <SelectTrigger className={cn("w-full h-12 bg-white border py-5.5 rounded-xl outline-none", vehicleFormErrors.category ? "border-red-500" : "border-gray-200")}>
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-[110]">
                             <SelectItem value="van">Van</SelectItem>
                             <SelectItem value="truck">Truck</SelectItem>
                             <SelectItem value="bike">Bike</SelectItem>
                           </SelectContent>
                         </Select>
+                        {vehicleFormErrors.category && <p className="text-xs text-red-500">{vehicleFormErrors.category}</p>}
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-end gap-4 pt-4">
-                  <button onClick={() => setIsAddVehicleOpen(false)} className="text-sm font-medium text-gray-500 hover:text-gray-800">CANCEL</button>
-                  <button onClick={handleAddVehicle} className="px-10 h-12 bg-[#FF4A00] text-white rounded-xl font-medium shadow-lg hover:bg-[#e64300]">Add</button>
+                  <button onClick={resetVehicleForm} className="text-sm cursor-pointer font-medium text-gray-500 hover:text-gray-800">CANCEL</button>
+                  <button
+                    onClick={handleAddVehicle}
+                    disabled={isCreatingVehicle}
+                    className="px-10 cursor-pointer h-12 bg-[#FF4A00] text-white rounded-xl font-medium shadow-lg hover:bg-[#e64300] disabled:opacity-50"
+                  >
+                    {isCreatingVehicle ? "Adding..." : "Add"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Assign Vehicle Modal ── */}
+      <AnimatePresence>
+        {isAssignModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsAssignModalOpen(false)}
+              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 sm:p-8 space-y-6">
+                <h2 className="text-xl font-semibold text-[#2C2E33]">Assign Vehicle to Driver</h2>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-500">Select Vehicle</label>
+                  <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
+                    <SelectTrigger className="w-full h-12 bg-white border border-gray-200 rounded-xl outline-none">
+                      <SelectValue placeholder="Choose a vehicle" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[110]">
+                      {vehicles.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-gray-500">No vehicles available</div>
+                      ) : (
+                        vehicles.map((v: any) => (
+                          <SelectItem key={v._id} value={v._id}>
+                            {v.name} ({v.licensePlate})
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setIsAssignModalOpen(false)}
+                    className="flex-1 h-11 bg-gray-100 text-gray-700 rounded-lg cursor-pointer font-medium hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAssignVehicle}
+                    disabled={!selectedVehicleId || isAssigning}
+                    className="flex-1 h-11 bg-[#FF4A00] text-white rounded-lg cursor-pointer font-medium hover:bg-[#e64300] transition-colors disabled:opacity-50"
+                  >
+                    {isAssigning ? "Assigning..." : "Assign"}
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -527,4 +706,6 @@ export default function ManageDriver() {
   );
 }
 
-import Image from "next/image";
+import Image from "next/image"; import toast from "react-hot-toast";
+import LoadingSpin from "../LoadingSpin";
+
