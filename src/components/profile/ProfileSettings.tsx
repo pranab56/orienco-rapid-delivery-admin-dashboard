@@ -145,7 +145,6 @@ export default function ProfileSettings() {
           <div className="space-y-1.5 flex flex-col">
             <Label className="text-sm font-semibold" style={{ color: "#2C2E33" }}>Role</Label>
             <Input 
-              className={inputCls} 
               style={inputStyle} 
               value={user?.role || ""}
               readOnly

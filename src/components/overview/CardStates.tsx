@@ -16,7 +16,7 @@ export default function CardStates({ data, loading }: { data: any, loading: bool
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
       {stats.map((stat, index) => (
-        <div>
+        <div key={index}>
           <Card className="rounded-lg h-full py-5 sm:py-7 overflow-hidden group hover:shadow-md transition-shadow duration-300">
             <CardContent className=" flex flex-col gap-4 sm:gap-6">
               {/* Icon Container */}
