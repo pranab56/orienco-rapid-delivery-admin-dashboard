@@ -25,6 +25,7 @@ const routeTitleMap: Record<string, string> = {
   "manage-driver": "Manage Driver",
   "users-management": "Users Management",
   "order-management": "Order Management",
+  "vehicle-management": "Vehicle Management",
   "help-support": "Help & Support",
   "contact-us": "Contact Us",
   "legal": "Legal",
@@ -48,10 +49,15 @@ export default function MyNavber() {
     // Remove (main) from parts if it exists in the URL (it shouldn't but just in case)
     const filteredParts = parts.filter(p => !p.startsWith('('));
 
-    const crumbs = ["Home Page"];
+    const crumbs = [{ title: "Home Page", path: "/" }];
+    let currentPath = "";
 
     filteredParts.forEach((part) => {
-      crumbs.push(routeTitleMap[part] || part.charAt(0).toUpperCase() + part.slice(1).replace(/-/g, " "));
+      currentPath += `/${part}`;
+      crumbs.push({
+        title: routeTitleMap[part] || part.charAt(0).toUpperCase() + part.slice(1).replace(/-/g, " "),
+        path: currentPath,
+      });
     });
 
     return crumbs;
@@ -70,13 +76,18 @@ export default function MyNavber() {
       {/* ── Breadcrumbs ── */}
       <div className="hidden lg:flex items-center gap-2 text-[#737780]">
         {breadcrumbs.map((crumb, i) => (
-          <div key={`${crumb}-${i}`} className="flex items-center gap-2">
-            <span className={cn(
-              "text-sm transition-colors",
-              i === breadcrumbs.length - 1 ? "font-semibold text-[#2C2E33]" : "hover:text-[#2C2E33] cursor-pointer"
-            )}>
-              {crumb}
-            </span>
+          <div key={`${crumb.title}-${i}`} className="flex items-center gap-2">
+            {i === breadcrumbs.length - 1 ? (
+              <span className="text-sm font-semibold text-[#2C2E33]">
+                {crumb.title}
+              </span>
+            ) : (
+              <Link href={crumb.path}>
+                <span className="text-sm transition-colors hover:text-[#2C2E33] cursor-pointer">
+                  {crumb.title}
+                </span>
+              </Link>
+            )}
             {i < breadcrumbs.length - 1 && <ChevronRight className="w-4 h-4" />}
           </div>
         ))}

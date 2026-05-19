@@ -10,6 +10,7 @@ import {
 } from "@/features/support/supportApi";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import LoadingSpin from "../LoadingSpin";
 
 interface HelpSupportDetailsProps {
   id: string;
@@ -46,7 +47,11 @@ export default function HelpSupportDetails({ id }: HelpSupportDetailsProps) {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-[400px]">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <LoadingSpin />
+      </div>
+    );
   }
 
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -16,7 +16,6 @@ import {
   Trash2,
   AlertTriangle,
   X,
-  Camera,
   CheckCircle2,
 } from "lucide-react";
 
@@ -52,7 +51,6 @@ import {
   useDeleteUserMutation,
 } from "@/features/user/userApi";
 import {
-  useCreateVehicleMutation,
   useGetAllVehicleQuery,
   useAssignVehicleToDriverMutation,
   useRemoveDriverMutation,
@@ -60,29 +58,29 @@ import {
 
 export default function ManageDriver() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"active" | "requests">("active");
+  const [activeTab, setActiveTabState] = useState<"active" | "requests">("active");
+  const [hasNewActive, setHasNewActive] = useState(false);
+  const [hasNewRequestIndicator, setHasNewRequestIndicator] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
-  const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
 
-  const [vehicleForm, setVehicleForm] = useState({
-    name: "",
-    plate: "",
-    category: "",
-    imageFile: null as File | null,
-    imagePreview: "",
-  });
+  useEffect(() => {
+    const savedTab = localStorage.getItem("manage-driver-active-tab");
+    if (savedTab === "active" || savedTab === "requests") {
+      setActiveTabState(savedTab);
+    }
+    const hasNew = localStorage.getItem("active-driver-has-new") === "true";
+    setHasNewActive(hasNew);
+  }, []);
 
-  const [vehicleFormErrors, setVehicleFormErrors] = useState({
-    name: "",
-    plate: "",
-    category: "",
-    imageFile: "",
-  });
+  const setActiveTab = (tab: "active" | "requests") => {
+    setActiveTabState(tab);
+    localStorage.setItem("manage-driver-active-tab", tab);
+  };
 
   const { data: activeResponse, isLoading: isActiveLoading } = useGetAllUserQuery({
     page,
@@ -93,12 +91,11 @@ export default function ManageDriver() {
     page,
     searchTerm: searchQuery
   });
-  const { data: vehicleData, isLoading: isVehicleLoading } = useGetAllVehicleQuery({ page: 1 });
+  const { data: vehicleData, isLoading: isVehicleLoading, refetch } = useGetAllVehicleQuery({ page: 1 });
   const vehicles = vehicleData?.data?.vehicles || [];
 
   const [approve, { isLoading: approveLoading }] = useApproveMutation();
   const [deleteUser, { isLoading: deletingUserLoading }] = useDeleteUserMutation();
-  const [createVehicle, { isLoading: isCreatingVehicle }] = useCreateVehicleMutation();
   const [assignVehicle, { isLoading: isAssigning }] = useAssignVehicleToDriverMutation();
   const [unassignVehicle] = useRemoveDriverMutation();
 
@@ -116,9 +113,44 @@ export default function ManageDriver() {
     try {
       const response = await approve({ id }).unwrap();
       toast.success(response?.message || "Driver approved successfully");
+      localStorage.setItem("active-driver-has-new", "true");
+      setHasNewActive(true);
+      
+      const currentRequests = requestsResponse?.data?.users || [];
+      const remainingIds = currentRequests.filter((r: any) => r._id !== id).map((r: any) => r._id);
+      localStorage.setItem("manage-driver-known-requests", JSON.stringify(remainingIds));
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to approve driver");
     }
+  };
+
+  useEffect(() => {
+    const currentRequests = requestsResponse?.data?.users || [];
+    if (currentRequests.length > 0) {
+      const knownJson = localStorage.getItem("manage-driver-known-requests");
+      const knownIds: string[] = knownJson ? JSON.parse(knownJson) : [];
+      
+      const hasNew = currentRequests.some((req: any) => !knownIds.includes(req._id));
+      if (hasNew && activeTab !== "requests") {
+        setHasNewRequestIndicator(true);
+      }
+    }
+  }, [requestsResponse, activeTab]);
+
+  const handleActiveTabClick = () => {
+    setActiveTab("active");
+    localStorage.removeItem("active-driver-has-new");
+    setHasNewActive(false);
+    setPage(1);
+  };
+
+  const handleRequestsTabClick = () => {
+    setActiveTab("requests");
+    setHasNewRequestIndicator(false);
+    setPage(1);
+    const currentRequests = requestsResponse?.data?.users || [];
+    const currentIds = currentRequests.map((req: any) => req._id);
+    localStorage.setItem("manage-driver-known-requests", JSON.stringify(currentIds));
   };
 
   const handleRemove = async () => {
@@ -132,57 +164,13 @@ export default function ManageDriver() {
     }
   };
 
-  const handleVehicleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setVehicleForm((prev) => ({
-      ...prev,
-      imageFile: file,
-      imagePreview: URL.createObjectURL(file),
-    }));
-    if (vehicleFormErrors.imageFile) {
-      setVehicleFormErrors((p) => ({ ...p, imageFile: "" }));
-    }
-  };
 
-  const resetVehicleForm = () => {
-    setIsAddVehicleOpen(false);
-    setVehicleForm({ name: "", plate: "", category: "", imageFile: null, imagePreview: "" });
-    setVehicleFormErrors({ name: "", plate: "", category: "", imageFile: "" });
-  };
-
-  const handleAddVehicle = async () => {
-    let hasError = false;
-    const errors = { name: "", plate: "", category: "", imageFile: "" };
-
-    if (!vehicleForm.imageFile) { errors.imageFile = "Vehicle image is required"; hasError = true; }
-    if (!vehicleForm.name) { errors.name = "Vehicle name is required"; hasError = true; }
-    if (!vehicleForm.plate) { errors.plate = "Plate number is required"; hasError = true; }
-    if (!vehicleForm.category) { errors.category = "Category is required"; hasError = true; }
-
-    setVehicleFormErrors(errors);
-
-    if (hasError) return;
-
-    const formData = new FormData();
-    formData.append("name", vehicleForm.name);
-    formData.append("licensePlate", vehicleForm.plate);
-    formData.append("type", vehicleForm.category);
-    formData.append("image", vehicleForm.imageFile!);
-
-    try {
-      const response = await createVehicle(formData).unwrap();
-      toast.success(response?.message || "Vehicle added successfully");
-      resetVehicleForm();
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to add vehicle");
-    }
-  };
 
   const handleAssignVehicle = async () => {
     if (!selectedDriverId || !selectedVehicleId) return;
     try {
       const response = await assignVehicle({ driverId: selectedDriverId, vehicleId: selectedVehicleId }).unwrap();
+      refetch();
       toast.success(response?.message || "Vehicle assigned successfully");
       setIsAssignModalOpen(false);
       setSelectedVehicleId("");
@@ -244,37 +232,33 @@ export default function ManageDriver() {
 
           <div className="flex p-1.5 sm:p-2 bg-gray-200 rounded-lg w-fit">
             <button
-              onClick={() => { setActiveTab("active"); setPage(1); }}
+              onClick={() => handleActiveTabClick()}
               className={cn(
-                "px-4 sm:px-6 py-2 sm:py-2.5 rounded-md text-xs sm:text-sm font-medium transition-all cursor-pointer",
+                "px-4 sm:px-6 py-2 sm:py-2.5 rounded-md text-xs sm:text-sm font-medium transition-all cursor-pointer relative flex items-center gap-2",
                 activeTab === "active" ? "bg-white text-[#2C2E33] shadow-sm" : "text-gray-500 hover:text-gray-700"
               )}
             >
               Active Driver
+              {hasNewActive && activeTab !== "active" && (
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full border-2 border-gray-100" />
+              )}
             </button>
             <button
-              onClick={() => { setActiveTab("requests"); setPage(1); }}
+              onClick={() => handleRequestsTabClick()}
               className={cn(
                 "px-4 sm:px-6 py-2 sm:py-2.5 rounded-md text-xs sm:text-sm cursor-pointer font-medium transition-all relative flex items-center gap-2",
                 activeTab === "requests" ? "bg-white text-[#2C2E33] shadow-sm" : "text-gray-500 hover:text-gray-700"
               )}
             >
               New Requests
-              {activeTab !== "requests" && requests.length > 0 && (
+              {hasNewRequestIndicator && activeTab !== "requests" && (
                 <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full border-2 border-gray-100" />
               )}
             </button>
           </div>
         </div>
 
-        <div className="flex items-center">
-          <button
-            onClick={() => setIsAddVehicleOpen(true)}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 cursor-pointer bg-[#FF4A00] text-white rounded-lg text-sm font-medium shadow-lg shadow-orange-100 hover:bg-[#e64300] transition-all"
-          >
-            Add Vehicles
-          </button>
-        </div>
+
       </div>
 
       {/* ── Driver List ── */}
@@ -533,114 +517,7 @@ export default function ManageDriver() {
         )}
       </AnimatePresence>
 
-      {/* ── Add New Vehicle Modal ── */}
-      <AnimatePresence>
-        {isAddVehicleOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={resetVehicleForm}
-              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-3xl bg-[#F2F2F2] rounded-xl shadow-2xl overflow-hidden"
-            >
-              <div className="p-6 sm:p-10 space-y-6 sm:space-y-8">
-                <h2 className="text-xl sm:text-2xl font-semibold text-center text-[#2C2E33]">Add New Vehicle</h2>
 
-                <div className="flex flex-col sm:flex-row gap-6">
-                  <div className="flex flex-col w-full sm:w-[42%]">
-                    <div
-                      className={cn("flex flex-col items-center justify-center gap-5 w-full border-2 border-dashed rounded-2xl p-8 bg-white/40 cursor-pointer hover:bg-white/60 transition-colors", vehicleFormErrors.imageFile ? "border-red-500" : "border-gray-300")}
-                      onClick={() => document.getElementById("vehicle-image-input")?.click()}
-                    >
-                      <input id="vehicle-image-input" type="file" accept="image/*" className="hidden" onChange={handleVehicleImageChange} />
-                      {vehicleForm.imagePreview ? (
-                        <Image src={vehicleForm.imagePreview} alt="Preview" width={128} height={128} className="w-32 h-32 object-cover rounded-xl" unoptimized />
-                      ) : (
-                        <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
-                          <Camera className="w-7 h-7 text-[#FF4A00]" />
-                        </div>
-                      )}
-                      <div className="text-center space-y-1">
-                        <p className="text-base font-semibold">Vehicle Image</p>
-                        <p className="text-xs text-gray-500">Upload a clear photo of the vehicle.</p>
-                      </div>
-                    </div>
-                    {vehicleFormErrors.imageFile && <p className="text-xs text-red-500 mt-2 ml-1">{vehicleFormErrors.imageFile}</p>}
-                  </div>
-
-                  <div className="flex-1 space-y-5">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-500">Vehicle Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Toyota Hiace"
-                        value={vehicleForm.name}
-                        onChange={(e) => {
-                          setVehicleForm((p) => ({ ...p, name: e.target.value }));
-                          if (vehicleFormErrors.name) setVehicleFormErrors((p) => ({ ...p, name: "" }));
-                        }}
-                        className={cn("w-full h-12 px-4 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-[#FF4A00]/20", vehicleFormErrors.name ? "border-red-500" : "border-gray-200")}
-                      />
-                      {vehicleFormErrors.name && <p className="text-xs text-red-500">{vehicleFormErrors.name}</p>}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-500">Plate Number</label>
-                        <input
-                          type="text"
-                          placeholder="ABC-1234"
-                          value={vehicleForm.plate}
-                          onChange={(e) => {
-                            setVehicleForm((p) => ({ ...p, plate: e.target.value }));
-                            if (vehicleFormErrors.plate) setVehicleFormErrors((p) => ({ ...p, plate: "" }));
-                          }}
-                          className={cn("w-full h-12 px-4 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-[#FF4A00]/20", vehicleFormErrors.plate ? "border-red-500" : "border-gray-200")}
-                        />
-                        {vehicleFormErrors.plate && <p className="text-xs text-red-500">{vehicleFormErrors.plate}</p>}
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-500">Category</label>
-                        <Select value={vehicleForm.category} onValueChange={(val) => {
-                          setVehicleForm((p) => ({ ...p, category: val }));
-                          if (vehicleFormErrors.category) setVehicleFormErrors((p) => ({ ...p, category: "" }));
-                        }}>
-                          <SelectTrigger className={cn("w-full h-12 bg-white border py-5.5 rounded-xl outline-none", vehicleFormErrors.category ? "border-red-500" : "border-gray-200")}>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent className="z-[110]">
-                            <SelectItem value="van">Van</SelectItem>
-                            <SelectItem value="truck">Truck</SelectItem>
-                            <SelectItem value="bike">Bike</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {vehicleFormErrors.category && <p className="text-xs text-red-500">{vehicleFormErrors.category}</p>}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end gap-4 pt-4">
-                  <button onClick={resetVehicleForm} className="text-sm cursor-pointer font-medium text-gray-500 hover:text-gray-800">CANCEL</button>
-                  <button
-                    onClick={handleAddVehicle}
-                    disabled={isCreatingVehicle}
-                    className="px-10 cursor-pointer h-12 bg-[#FF4A00] text-white rounded-xl font-medium shadow-lg hover:bg-[#e64300] disabled:opacity-50"
-                  >
-                    {isCreatingVehicle ? "Adding..." : "Add"}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* ── Assign Vehicle Modal ── */}
       <AnimatePresence>

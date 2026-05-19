@@ -42,6 +42,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 import { useGetAllUserQuery, useSuspenseMutation, useDeleteUserMutation } from "@/features/user/userApi";
@@ -52,6 +62,9 @@ export default function UsersManagement() {
   const [filterValue, setFilterValue] = useState("all");
 
   const [page, setPage] = useState(1);
+  
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const { data: response, isLoading } = useGetAllUserQuery({
     page,
@@ -86,12 +99,18 @@ export default function UsersManagement() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
-    try {
-      const response = await deleteUser({ id }).unwrap();
-      toast.success(response?.message);
+  const handleDeleteClick = (id: string) => {
+    setSelectedUserId(id);
+    setIsDeleteModalOpen(true);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!selectedUserId) return;
+    try {
+      const response = await deleteUser({ id: selectedUserId }).unwrap();
+      toast.success(response?.message || "User removed successfully");
+      setIsDeleteModalOpen(false);
+      setSelectedUserId(null);
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to delete user");
     }
@@ -270,7 +289,7 @@ export default function UsersManagement() {
                           <div className="h-px bg-gray-50 my-1 mx-1" />
 
                           <DropdownMenuItem
-                            onClick={() => handleDelete(u._id)}
+                            onClick={() => handleDeleteClick(u._id)}
                             className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-red-600 hover:text-red-700 rounded-lg cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -342,6 +361,28 @@ export default function UsersManagement() {
           </button>
         </div>
       )}
+
+      <AlertDialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <AlertDialogContent className="bg-white rounded-xl border-none shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold text-[#2C2E33]">Remove User?</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-500 font-medium font-normal">
+              Are you sure you want to permanently remove this user account? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6">
+            <AlertDialogCancel className="bg-gray-100 border-none rounded-sm font-medium text-gray-600 hover:bg-gray-200 transition-colors">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-[#FF0000] text-white rounded-sm font-medium hover:bg-red-600 transition-colors"
+            >
+              Yes, Remove User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

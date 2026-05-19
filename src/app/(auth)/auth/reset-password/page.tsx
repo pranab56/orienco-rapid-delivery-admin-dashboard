@@ -174,9 +174,15 @@ function ResetPasswordContent() {
 }
 
 
+import LoadingSpin from '@/components/LoadingSpin';
+
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-[#F8F7FC]">
+        <LoadingSpin />
+      </div>
+    }>
       <ResetPasswordContent />
     </Suspense>
   );

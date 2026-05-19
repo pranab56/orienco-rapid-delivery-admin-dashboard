@@ -46,7 +46,7 @@ export const vehicleApi = baseApi.injectEndpoints({
                 method: "PATCH",
                 body: data,
             }),
-            invalidatesTags: ["vehicle"],
+            invalidatesTags: ["vehicle", "user"],
         }),
 
 
@@ -56,7 +56,7 @@ export const vehicleApi = baseApi.injectEndpoints({
                 method: "PATCH",
                 body: data,
             }),
-            invalidatesTags: ["vehicle"],
+            invalidatesTags: ["vehicle", "user"],
         }),
     }),
 });

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import {
   Bike,
   Box,
+  Car,
   Headset,
   HelpCircle,
   LayoutGrid,
@@ -42,6 +43,7 @@ const sections = [
     items: [
       { name: "Users Management", path: "/users-management", icon: Users },
       { name: "Order Management", path: "/order-management", icon: Box },
+      { name: "Vehicle Management", path: "/vehicle-management", icon: Car },
     ],
   },
   {

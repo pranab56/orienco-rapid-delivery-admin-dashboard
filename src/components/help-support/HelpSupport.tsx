@@ -35,6 +35,7 @@ import {
   useDeleteSupportMutation,
 } from "@/features/support/supportApi";
 import { toast } from "sonner";
+import LoadingSpin from "../LoadingSpin";
 
 export default function HelpSupport() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,7 +74,11 @@ export default function HelpSupport() {
   });
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-[400px]">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <LoadingSpin />
+      </div>
+    );
   }
 
   if (isError) {
