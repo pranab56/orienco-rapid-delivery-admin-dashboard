@@ -22,6 +22,7 @@ import {
   LayoutGrid,
   LogOut,
   Megaphone,
+  Settings,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -141,6 +142,49 @@ export default function AppSideBar() {
               </SidebarGroupContent>
             </SidebarGroup>
           ))}
+
+          <SidebarGroup className="mb-0 mt-2">
+            {!isCollapsed && (
+              <span className="px-4 text-base font-medium tracking-widest text-[#9CA3AF] mb-4 block">
+                SYSTEM
+              </span>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-2">
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip="Settings"
+                    className={cn(
+                      "h-12 px-4 rounded-sm transition-all duration-200 group relative",
+                      isActive("/setting")
+                        ? "text-white shadow-lg shadow-orange-200"
+                        : "text-[#737780] hover:bg-gray-200/50 hover:text-[#2C2E33]"
+                    )}
+                    style={isActive("/setting") ? { backgroundColor: "#FF4A00" } : {}}
+                  >
+                    <Link
+                      href="/setting"
+                      className="flex items-center w-full"
+                      onClick={() => setOpenMobile(false)}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Settings
+                          className={cn(
+                            "w-5 h-5",
+                            isActive("/setting") ? "text-white" : "text-[#737780]"
+                          )}
+                        />
+                        {!isCollapsed && (
+                          <span className="font-medium text-sm">Settings</span>
+                        )}
+                      </div>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         </div>
 
         {/* ── Footer / Logout ── */}

@@ -30,6 +30,7 @@ const routeTitleMap: Record<string, string> = {
   "contact-us": "Contact Us",
   "legal": "Legal",
   "faq": "FAQ",
+  "setting": "Settings",
   "terms-conditions": "Terms & Conditions",
   "privacy-policy": "Privacy Policy",
 };
