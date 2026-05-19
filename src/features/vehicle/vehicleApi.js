@@ -41,7 +41,7 @@ export const vehicleApi = baseApi.injectEndpoints({
 
 
         assignVehicleToDriver: builder.mutation({
-            query: (data) => ({
+            query: (data) => ({ 
                 url: `/vehicle/assign-driver`,
                 method: "PATCH",
                 body: data,
