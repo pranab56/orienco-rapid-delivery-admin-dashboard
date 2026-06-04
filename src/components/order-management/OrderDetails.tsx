@@ -289,8 +289,6 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
                 <span className="text-3xl font-medium text-[#FF4A00]">${parcel.totalDeliveryFee.toFixed(2)}</span>
               </div>
 
-
-
               <div className='space-y-2'>
                 <div className="flex justify-between text-sm font-medium text-gray-500">
                   <span>DriverShare</span>
