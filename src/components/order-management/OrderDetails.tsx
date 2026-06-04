@@ -1,21 +1,21 @@
 'use client';
+import { Card, CardContent } from "@/components/ui/card";
+import { useGetParcelByIdQuery } from "@/features/parcel/parcelApi";
+import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
-  User,
-  Mail,
-  Phone,
-  Calendar,
   Box,
-  Map as MapIcon,
+  Calendar,
   Clock,
   FileText,
-  Star,
+  Mail,
+  Map as MapIcon,
   Package,
+  Phone,
+  Star,
+  User,
 } from "lucide-react";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { useGetParcelByIdQuery } from "@/features/parcel/parcelApi";
 
 interface OrderDetailsProps {
   id: string;
@@ -264,23 +264,46 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
               <p className="text-base font-medium text-[#2C2E33]">Price Breakdown</p>
 
               <div className="space-y-4">
+
+
+
+                <div className="flex justify-between text-base font-medium text-gray-500">
+                  <span>Distance</span>
+                  <span>${parcel.distance.toFixed(2)}</span>
+                </div>
+
+                <div className="flex justify-between text-base font-medium text-gray-500">
+                  <span>Cost Per distance</span>
+                  {/* <span>${(parcel.perKiloCost * parcel.distance).toFixed(2)}</span> */}
+                  <span>${parcel.perKiloCost.toFixed(2)}+{parcel.distance.toFixed(2)}km = ${(parcel.perKiloCost * parcel.distance).toFixed(2)}</span>
+                </div>
                 <div className="flex justify-between text-base font-medium text-gray-500">
                   <span>Base fare</span>
                   <span>${parcel.baseFare.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-base font-medium text-gray-500">
-                  <span>Platform Commission</span>
-                  <span>${parcel.platformCommission.toFixed(2)}</span>
-                </div>
               </div>
+
 
               <div className="flex justify-between items-end pt-6 border-t border-gray-100">
                 <span className="text-xl font-medium text-[#2C2E33]">Total Fee</span>
                 <span className="text-3xl font-medium text-[#FF4A00]">${parcel.totalDeliveryFee.toFixed(2)}</span>
               </div>
+
+
+
+              <div className='space-y-2'>
+                <div className="flex justify-between text-sm font-medium text-gray-500">
+                  <span>DriverShare</span>
+                  <span>${parcel.driverShare.toFixed(2)}</span>
+                </div>
+
+                <div className="flex justify-between text-sm font-medium text-gray-500">
+                  <span>Platform Commission</span>
+                  <span>${parcel.platformCommission.toFixed(2)}</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
-
         </div>
       </div>
     </div>

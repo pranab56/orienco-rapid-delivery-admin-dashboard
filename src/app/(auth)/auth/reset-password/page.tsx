@@ -10,8 +10,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, Suspense, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { motion } from 'framer-motion';
 import { useResendPasswordMutation } from '@/features/auth/authApi';
+import { motion } from 'framer-motion';
 
 function ResetPasswordContent() {
   const [password, setPassword] = useState('');
@@ -63,6 +63,7 @@ function ResetPasswordContent() {
       toast.error(error?.data?.message || "Something went wrong");
     }
   };
+
 
   return (
     <div className="flex min-h-screen bg-[#F8F7FC] font-sans items-center justify-center p-4">
