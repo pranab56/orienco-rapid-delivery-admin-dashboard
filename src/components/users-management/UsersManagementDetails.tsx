@@ -4,6 +4,9 @@
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import LoadingSpin from "../LoadingSpin";
+import { useSelector } from "react-redux";
+import { selectCurrency } from "@/features/currency/currencySlice";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 import {
   ArrowLeft,
@@ -49,6 +52,7 @@ interface UsersManagementDetailsProps {
 
 export default function UsersManagementDetails({ id }: UsersManagementDetailsProps) {
   const router = useRouter();
+  const currency = useSelector(selectCurrency);
   const { data: response, isLoading } = useGetUserByIdQuery({ id });
   const [suspense] = useSuspenseMutation();
   const { data: vehicleData } = useGetAllVehicleQuery({ page: 1 });
@@ -322,12 +326,12 @@ export default function UsersManagementDetails({ id }: UsersManagementDetailsPro
                         user?.driverInfo?.totalEarnings ? (
                           <div className="text-left">
                             <p className="text-sm font-bold text-gray-400 tracking-widest uppercase">Total Earnings</p>
-                            <p className="text-sm font-medium text-gray-700">${user?.driverInfo?.totalEarnings}</p>
+                            <p className="text-sm font-medium text-gray-700">{formatCurrency(user?.driverInfo?.totalEarnings, currency)}</p>
                           </div>
                         ) : (
                           <div className="text-left">
                             <p className="text-sm font-bold text-gray-400 tracking-widest uppercase">Total Earnings</p>
-                            <p className="text-sm font-medium text-gray-700">$0.00</p>
+                            <p className="text-sm font-medium text-gray-700">{formatCurrency(0, currency)}</p>
                           </div>
                         )
                       }

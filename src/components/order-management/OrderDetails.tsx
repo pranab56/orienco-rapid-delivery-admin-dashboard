@@ -1,6 +1,9 @@
 'use client';
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetParcelByIdQuery } from "@/features/parcel/parcelApi";
+import { useSelector } from "react-redux";
+import { selectCurrency } from "@/features/currency/currencySlice";
+import { formatCurrency } from "@/utils/formatCurrency";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -24,6 +27,7 @@ interface OrderDetailsProps {
 export default function OrderDetails({ id }: OrderDetailsProps) {
   const { data: response, isLoading } = useGetParcelByIdQuery(id);
   const parcel = response?.data;
+  const currency = useSelector(selectCurrency);
 
   if (isLoading) {
     return (
@@ -269,35 +273,34 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
 
                 <div className="flex justify-between text-base font-medium text-gray-500">
                   <span>Distance</span>
-                  <span>${parcel.distance.toFixed(2)}</span>
+                  <span>{formatCurrency(parcel.distance, currency)}</span>
                 </div>
 
                 <div className="flex justify-between text-base font-medium text-gray-500">
                   <span>Cost Per distance</span>
-                  {/* <span>${(parcel.perKiloCost * parcel.distance).toFixed(2)}</span> */}
-                  <span>${parcel.perKiloCost.toFixed(2)}+{parcel.distance.toFixed(2)}km = ${(parcel.perKiloCost * parcel.distance).toFixed(2)}</span>
+                  <span>{formatCurrency(parcel.perKiloCost, currency)}+{parcel.distance.toFixed(2)}km = {formatCurrency(parcel.perKiloCost * parcel.distance, currency)}</span>
                 </div>
                 <div className="flex justify-between text-base font-medium text-gray-500">
                   <span>Base fare</span>
-                  <span>${parcel.baseFare.toFixed(2)}</span>
+                  <span>{formatCurrency(parcel.baseFare, currency)}</span>
                 </div>
               </div>
 
 
               <div className="flex justify-between items-end pt-6 border-t border-gray-100">
                 <span className="text-xl font-medium text-[#2C2E33]">Total Fee</span>
-                <span className="text-3xl font-medium text-[#FF4A00]">${parcel.totalDeliveryFee.toFixed(2)}</span>
+                <span className="text-3xl font-medium text-[#FF4A00]">{formatCurrency(parcel.totalDeliveryFee, currency)}</span>
               </div>
 
               <div className='space-y-2'>
                 <div className="flex justify-between text-sm font-medium text-gray-500">
                   <span>DriverShare</span>
-                  <span>${parcel.driverShare.toFixed(2)}</span>
+                  <span>{formatCurrency(parcel.driverShare, currency)}</span>
                 </div>
 
                 <div className="flex justify-between text-sm font-medium text-gray-500">
                   <span>Platform Commission</span>
-                  <span>${parcel.platformCommission.toFixed(2)}</span>
+                  <span>{formatCurrency(parcel.platformCommission, currency)}</span>
                 </div>
               </div>
             </CardContent>

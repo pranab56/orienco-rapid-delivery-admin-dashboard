@@ -1,21 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { motion } from "framer-motion";
-import { Activity } from "lucide-react";
+import { useSelector } from "react-redux";
+import { selectCurrency } from "@/features/currency/currencySlice";
+import { formatCurrency, getCurrencySymbol } from "@/utils/formatCurrency";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell } from "recharts";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "../ui/skeleton";
 import LoadingSpin from "../LoadingSpin";
 
 export default function SalesAnalytics({ data, loading, totalRevenue }: { data: any[], totalRevenue: number, loading: boolean }) {
+  const currency = useSelector(selectCurrency);
+  const symbol = getCurrencySymbol(currency);
 
   const chartData = data?.map(item => ({
     name: item.month,
@@ -32,7 +26,7 @@ export default function SalesAnalytics({ data, loading, totalRevenue }: { data: 
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1 sm:space-y-2">
               <h2 className="text-lg sm:text-xl font-medium text-[#2C2E33]">Sales Analytics</h2>
-              <p className="text-3xl sm:text-5xl font-medium text-[#2C2E33] tracking-tight">${totalRevenue?.toFixed(2) || "0.00"}</p>
+              <p className="text-3xl sm:text-5xl font-medium text-[#2C2E33] tracking-tight">{formatCurrency(totalRevenue || 0, currency)}</p>
             </div>
           </div>
 
@@ -55,7 +49,7 @@ export default function SalesAnalytics({ data, loading, totalRevenue }: { data: 
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: "#9CA3AF", fontSize: 11, fontWeight: 500 }}
-                  tickFormatter={(v) => `$${v / 1000}k`}
+                  tickFormatter={(v) => `${symbol}${v / 1000}k`}
                   ticks={[0, 3500, 7000, 10500, 14000]}
                 />
                 <Tooltip

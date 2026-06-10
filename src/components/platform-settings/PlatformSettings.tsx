@@ -14,6 +14,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
+import { useDispatch, useSelector } from "react-redux";
+import { setCurrency, selectCurrency } from "@/features/currency/currencySlice";
+import { CURRENCY_MAP } from "@/utils/formatCurrency";
 
 const inputCls =
   "h-11 rounded-sm border text-sm px-4 focus-visible:ring-1 focus-visible:ring-[#FF4A00] focus-visible:border-[#FF4A00]";
@@ -62,6 +65,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 /* ── Main component ──────────────────────────────────────────── */
 export default function PlatformSettings() {
+  const dispatch = useDispatch();
+  const currentCurrency = useSelector(selectCurrency);
+
   const handleSave = () => {
     toast.success("Settings saved successfully!");
   };
@@ -89,14 +95,14 @@ export default function PlatformSettings() {
       <Section title="Localization & Currencies" delay={0.1}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Default Base Currency">
-            <Select defaultValue="USD">
+            <Select value={currentCurrency} onValueChange={(val) => dispatch(setCurrency(val))}>
               <SelectTrigger className="h-11 w-full rounded-sm py-5 border" style={inputStyle}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="USD">USD - United States Dollar</SelectItem>
-                <SelectItem value="EUR">EUR - Euro</SelectItem>
-                <SelectItem value="ETB">ETB - Ethiopian Birr</SelectItem>
+                {Object.entries(CURRENCY_MAP).map(([code, { name }]) => (
+                  <SelectItem key={code} value={code}>{code} - {name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>
@@ -120,7 +126,7 @@ export default function PlatformSettings() {
             Supported Settlement Currencies
           </Label>
           <div className="flex flex-wrap gap-3">
-            {["USD", "EUR", "ETB"].map((curr) => (
+            {Object.keys(CURRENCY_MAP).map((curr) => (
               <label
                 key={curr}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-sm border cursor-pointer select-none transition-colors"

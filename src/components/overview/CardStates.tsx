@@ -1,13 +1,16 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { motion } from "framer-motion";
 import { Bike, DollarSign, Package, Users } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
+import { useSelector } from "react-redux";
+import { selectCurrency } from "@/features/currency/currencySlice";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 export default function CardStates({ data, loading }: { data: any, loading: boolean }) {
+  const currency = useSelector(selectCurrency);
   const stats = [
-    { title: "TOTAL REVENUE", value: `$${data?.totalRevenue?.toFixed(2) || "0.00"}`, icon: DollarSign },
+    { title: "TOTAL REVENUE", value: formatCurrency(data?.totalRevenue || 0, currency), icon: DollarSign },
     { title: "TOTAL USERS", value: data?.totalUsers?.toString() || "0", icon: Users },
     { title: "TOTAL DRIVERS", value: data?.totalDrivers?.toString() || "0", icon: Bike },
     { title: "TOTAL DELIVERY", value: data?.totalDelivery?.toString() || "0", icon: Package },
