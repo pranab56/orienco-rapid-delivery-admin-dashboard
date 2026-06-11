@@ -4,6 +4,7 @@ import { useGetParcelByIdQuery } from "@/features/parcel/parcelApi";
 import { useSelector } from "react-redux";
 import { selectCurrency } from "@/features/currency/currencySlice";
 import { formatCurrency } from "@/utils/formatCurrency";
+import DeliveryMap from "./DeliveryMap";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -127,17 +128,15 @@ export default function OrderDetails({ id }: OrderDetailsProps) {
                 </div>
               </div>
 
-              {/* Live Google Map */}
+              {/* Leaflet Map — Pickup (red) + Dropoff (dark blue) with route */}
               <div className="w-full aspect-[21/9] bg-gray-100 rounded-3xl overflow-hidden relative border border-white shadow-inner">
-                <iframe
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
-                  src={`https://maps.google.com/maps?q=${parcel.dropLocation.coordinates[1]},${parcel.dropLocation.coordinates[0]}&z=15&output=embed`}
-                  className="absolute inset-0"
+                <DeliveryMap
+                  pickupLat={parcel.pickupLocation.coordinates[1]}
+                  pickupLng={parcel.pickupLocation.coordinates[0]}
+                  dropLat={parcel.dropLocation.coordinates[1]}
+                  dropLng={parcel.dropLocation.coordinates[0]}
+                  pickupAddress={parcel.pickupLocation.address}
+                  dropAddress={parcel.dropLocation.address}
                 />
               </div>
             </CardContent>
